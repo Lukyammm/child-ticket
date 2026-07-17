@@ -1,1 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Casa da Gestante - Etiquetas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1d2a24;
+  --paper: #f4f6f3;
+  --card: #ffffff;
+  --line: #e0e6e0;
+  --mut: #68766e;
+  --pri: #0e7a5f;
+  --pri-d: #0a5a46;
+  --pri-s: #e3f0ea;
+  --r: 12px;
+  --sh: 0 1px 2px rgba(29,42,36,.06), 0 4px 14px rgba(29,42,36,.05);
+  --sh-lift: 0 6px 16px rgba(29,42,36,.10), 0 2px 5px rgba(29,42,36,.06);
+  --body: 'Inter', system-ui, sans-serif;
+}
 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--body); background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+/* Topbar */
+.topbar { position: sticky; top: 0; z-index: 40; background: rgba(244, 246, 243, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.topbar .in { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.brand .dot { width: 34px; height: 34px; background: var(--pri-s); color: var(--pri); border-radius: 50%; display: grid; place-items: center; }
+.brand b { font-weight: 600; font-size: 17px; }
+.brand small { display: block; color: var(--mut); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; }
+
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.date-selector { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; outline: none; }
+.date-selector:focus { border-color: var(--pri); }
+
+.btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: #fff; cursor: pointer; transition: .15s; display: inline-flex; align-items: center; justify-content: center; }
+.btn:hover { background: var(--paper); }
+.btn.primary { background: var(--pri); color: #fff; border-color: var(--pri); }
+.btn.primary:hover { background: var(--pri-d); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Layout & Table */
+main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--line); background: var(--card); display: flex; justify-content: space-between; align-items: center; }
+.card-header h2 { font-size: 18px; font-weight: 600; }
+
+.tbl-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; text-align: left; }
+.tbl th { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--mut); padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.tbl td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl tbody tr:hover { background: #fafafa; }
+.tbl tbody tr:last-child td { border-bottom: none; }
+
+.paciente-nome { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.paciente-diag { font-size: 12px; color: var(--mut); }
+.dieta-badge { display: inline-block; background: var(--pri-s); color: var(--pri-d); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+
+.meal-btn { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; display: block; width: 100%; text-align: left; margin-bottom: 4px; }
+.meal-btn:hover { border-color: var(--pri); color: var(--pri-d); background: var(--pri-s); }
+.meal-btn:last-child { margin-bottom: 0; }
+
+/* Modal */
+.overlay { position: fixed; inset: 0; background: rgba(29, 42, 36, 0.45); z-index: 60; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+.overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; animation: up .2s ease-out; position: relative; margin: auto; }
+@keyframes up { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.xbtn { background: none; border: none; font-size: 20px; color: var(--mut); cursor: pointer; }
+.modal-body { padding: 24px 20px; max-height: 70vh; overflow-y: auto; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid var(--line); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Forms */
+.field { margin-bottom: 15px; }
+.field label { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 6px; }
+.field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fff; font-family: inherit; font-size: 14px; outline: none; transition: .15s; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+
+/* Label Preview (Screen) */
+.label-preview-wrapper { background: var(--paper); padding: 20px; display: flex; justify-content: center; }
+.label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 5mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; font-family: Arial, sans-serif; color: #000; }
+.label-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+.label-paciente { font-size: 16px; font-weight: bold; margin-bottom: 8px; line-height: 1.2; }
+.label-refeicao { font-size: 18px; font-weight: bold; margin-bottom: 6px; text-transform: uppercase; }
+.label-dieta { font-size: 16px; font-weight: bold; }
+
+/* Toasts */
+#toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 99; display: grid; gap: 8px; pointer-events: none; }
+.toast { background: var(--ink); color: #fff; border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: up .2s ease-out; }
+.toast.success { background: var(--pri); }
+.toast.error { background: #b3402e; }
+
+.loader { text-align: center; padding: 40px; color: var(--mut); font-weight: 500; }
+.edit-btn { background: none; border: none; color: var(--pri); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; margin-top: 6px; }
+
+/* Print Styles */
+@media print {
+  @page { size: 104mm 56mm; margin: 0; }
+  body * { visibility: hidden; }
+  .label-preview, .label-preview * { visibility: visible; }
+  .label-preview { position: absolute; left: 0; top: 0; width: 104mm; height: 56mm; border: none; box-shadow: none; padding: 3mm 5mm; margin: 0; background: transparent; justify-content: center; }
+  .label-header { font-size: 12pt; margin-bottom: 6pt; }
+  .label-paciente { font-size: 14pt; margin-bottom: 6pt; }
+  .label-refeicao { font-size: 16pt; margin-bottom: 4pt; }
+  .label-dieta { font-size: 14pt; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="in">
+    <a class="brand" href="#">
+      <span class="dot">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </span>
+      <span><b>Casa da Gestante</b><small>Controle de Dietas</small></span>
+    </a>
+    <div class="top-actions">
+      <select id="date-select" class="date-selector" onchange="onDateChange()">
+        <option value="">Carregando datas...</option>
+      </select>
+      <button class="btn primary" onclick="openFormModal()">+ Adicionar Paciente</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="card-header">
+      <h2 id="table-title">Pacientes do Dia</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Paciente / Diagnóstico</th>
+            <th>Dieta</th>
+            <th>Desjejum (6h)</th>
+            <th>Colação (9h)</th>
+            <th>Almoço (12h)</th>
+            <th>Lanche (15h)</th>
+            <th>Jantar (18h)</th>
+            <th>Ceia (21h)</th>
+          </tr>
+        </thead>
+        <tbody id="tb-pacientes">
+          <tr><td colspan="8" class="loader">Carregando dados...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- Toasts -->
+<div id="toasts"></div>
+
+<!-- Modal de Impressão -->
+<div class="overlay" id="modal-print">
+  <div class="modal" style="max-width: 450px;">
+    <div class="modal-header">
+      <h3>Imprimir Etiqueta</h3>
+      <button class="xbtn" onclick="closeModal('modal-print')">×</button>
+    </div>
+    <div class="label-preview-wrapper">
+      <div class="label-preview" id="print-area">
+        <div class="label-header">
+          <span>Casa da Gestante</span>
+          <span id="lbl-data"></span>
+        </div>
+        <div class="label-paciente" id="lbl-paciente"></div>
+        <div class="label-refeicao" id="lbl-refeicao"></div>
+        <div class="label-dieta" id="lbl-dieta"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-print')">Cancelar</button>
+      <button class="btn primary" onclick="window.print()">Imprimir Etiqueta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Formulário -->
+<div class="overlay" id="modal-form">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="form-title">Adicionar Paciente</h3>
+      <button class="xbtn" onclick="closeModal('modal-form')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="paciente-form" onsubmit="salvarPacienteForm(event)">
+        <input type="hidden" id="f-id">
+        <div class="field">
+          <label>Prontuário / Nome do Paciente</label>
+          <input type="text" id="f-nome" required placeholder="Ex: 32083 - Antonia de Araujo Silva">
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Diagnóstico</label>
+            <input type="text" id="f-diag" placeholder="Ex: Puérpera">
+          </div>
+          <div class="field">
+            <label>Dieta</label>
+            <input type="text" id="f-dieta" required placeholder="Ex: Geral HAS DM">
+          </div>
+        </div>
+        
+        <hr style="border:0; border-top:1px solid var(--line); margin: 15px 0;">
+        <p style="font-weight:600; margin-bottom: 10px; color: var(--mut); font-size:12px; text-transform:uppercase;">Refeições do Dia</p>
+
+        <div class="field">
+          <label>Desjejum (6h)</label>
+          <input type="text" id="f-desjejum" placeholder="Detalhes do desjejum">
+        </div>
+        <div class="field">
+          <label>Colação (9h)</label>
+          <input type="text" id="f-colacao" placeholder="Detalhes da colação">
+        </div>
+        <div class="field">
+          <label>Almoço (12h)</label>
+          <input type="text" id="f-almoco" placeholder="Detalhes do almoço">
+        </div>
+        <div class="field">
+          <label>Lanche (15h)</label>
+          <input type="text" id="f-lanche" placeholder="Detalhes do lanche">
+        </div>
+        <div class="field">
+          <label>Jantar (18h)</label>
+          <input type="text" id="f-jantar" placeholder="Detalhes do jantar">
+        </div>
+        <div class="field">
+          <label>Ceia (21h)</label>
+          <input type="text" id="f-ceia" placeholder="Detalhes da ceia">
+        </div>
+        <div class="field">
+          <label>Observação</label>
+          <textarea id="f-obs" placeholder="Observações adicionais (opcional)" style="min-height:60px"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeModal('modal-form')">Cancelar</button>
+      <button type="submit" form="paciente-form" class="btn primary" id="btn-salvar">Salvar Paciente</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let dataPacientes = [];
+  let currentDate = "";
+
+  // Helper para hoje
+  function getDataAtual() {
+    const data = new Date();
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  // Toasts
+  function showToast(msg, type='success') {
+    const c = document.getElementById('toasts');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerText = msg;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 3000);
+  }
+
+  // Init
+  document.addEventListener("DOMContentLoaded", () => {
+    loadDates();
+  });
+
+  function loadDates() {
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(renderDates).getDatasDisponiveis();
+    } else {
+      setTimeout(() => renderDates(['17/07/2026', '18/07/2026']), 300);
+    }
+  }
+
+  function renderDates(dates) {
+    const sel = document.getElementById("date-select");
+    sel.innerHTML = "";
+    
+    // Garantir que a data atual está na lista, se não, adiciona
+    const hoje = getDataAtual();
+    if (!dates.includes(hoje)) dates.push(hoje);
+    
+    // Sort basic (assume formato dd/mm/yyyy) - simplify to just populate
+    dates.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.innerText = d;
+      sel.appendChild(opt);
+    });
+    
+    sel.value = hoje;
+    onDateChange();
+  }
+
+  function onDateChange() {
+    currentDate = document.getElementById("date-select").value;
+    document.getElementById("table-title").innerText = `Pacientes do Dia: ${currentDate}`;
+    
+    const tbody = document.getElementById("tb-pacientes");
+    tbody.innerHTML = "<tr><td colspan='8' class='loader'>Buscando pacientes...</td></tr>";
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(renderTable).getPacientesPorData(currentDate);
+    } else {
+      setTimeout(() => {
+        renderTable([
+          { id: 1, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
+          { id: 2, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
+        ]);
+      }, 500);
+    }
+  }
+
+  function renderTable(pacientes) {
+    dataPacientes = pacientes;
+    const tbody = document.getElementById("tb-pacientes");
+    tbody.innerHTML = "";
+
+    if (pacientes.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='8' class='loader'>Nenhum paciente encontrado para esta data. Adicione um novo!</td></tr>";
+      return;
+    }
+
+    pacientes.forEach((p, index) => {
+      const tr = document.createElement("tr");
+      
+      const tdInfo = document.createElement("td");
+      tdInfo.innerHTML = `
+        <div class="paciente-nome">${p.prontuario_nome}</div>
+        <div class="paciente-diag">${p.diagnostico}</div>
+        <button class="edit-btn" onclick="openFormModal(${index})">Editar paciente</button>
+      `;
+      
+      const tdDieta = document.createElement("td");
+      tdDieta.innerHTML = `<span class="dieta-badge">${p.dieta}</span>`;
+
+      const renderMealBtn = (mealVal, mealName) => {
+        if (!mealVal) return '-';
+        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')">${mealVal}</button>`;
+      };
+
+      tr.appendChild(tdInfo);
+      tr.appendChild(tdDieta);
+      tr.innerHTML += `
+        <td>${renderMealBtn(p.desjejum, 'Desjejum 6H')}</td>
+        <td>${renderMealBtn(p.colacao, 'Colação 9H')}</td>
+        <td>${renderMealBtn(p.almoco, 'Almoço 12H')}</td>
+        <td>${renderMealBtn(p.lanche, 'Lanche 15H')}</td>
+        <td>${renderMealBtn(p.jantar, 'Jantar 18H')}</td>
+        <td>${renderMealBtn(p.ceia, 'Ceia 21H')}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // === Modal Print ===
+  function openPrintModal(index, mealName) {
+    const p = dataPacientes[index];
+    document.getElementById("lbl-data").innerText = currentDate;
+    const pacienteStr = p.prontuario_nome.includes("-") 
+      ? `Paciente: ${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}` 
+      : `Paciente: ${p.prontuario_nome}`;
+    
+    document.getElementById("lbl-paciente").innerText = pacienteStr;
+    document.getElementById("lbl-refeicao").innerText = mealName;
+    document.getElementById("lbl-dieta").innerText = p.dieta.toUpperCase();
+
+    document.getElementById("modal-print").classList.add("open");
+  }
+
+  // === Modal Form (Adicionar/Editar) ===
+  function openFormModal(index = null) {
+    const form = document.getElementById("paciente-form");
+    form.reset();
+    document.getElementById("f-id").value = "";
+
+    if (index !== null) {
+      document.getElementById("form-title").innerText = "Editar Paciente";
+      const p = dataPacientes[index];
+      document.getElementById("f-id").value = p.id;
+      document.getElementById("f-nome").value = p.prontuario_nome;
+      document.getElementById("f-diag").value = p.diagnostico;
+      document.getElementById("f-dieta").value = p.dieta;
+      document.getElementById("f-desjejum").value = p.desjejum;
+      document.getElementById("f-colacao").value = p.colacao;
+      document.getElementById("f-almoco").value = p.almoco;
+      document.getElementById("f-lanche").value = p.lanche;
+      document.getElementById("f-jantar").value = p.jantar;
+      document.getElementById("f-ceia").value = p.ceia;
+      document.getElementById("f-obs").value = p.observacao;
+    } else {
+      document.getElementById("form-title").innerText = "Adicionar Paciente";
+    }
+
+    document.getElementById("modal-form").classList.add("open");
+  }
+
+  function salvarPacienteForm(e) {
+    e.preventDefault();
+    const btn = document.getElementById("btn-salvar");
+    btn.disabled = true;
+    btn.innerText = "Salvando...";
+
+    const paciente = {
+      id: document.getElementById("f-id").value,
+      prontuario_nome: document.getElementById("f-nome").value,
+      diagnostico: document.getElementById("f-diag").value,
+      dieta: document.getElementById("f-dieta").value,
+      desjejum: document.getElementById("f-desjejum").value,
+      colacao: document.getElementById("f-colacao").value,
+      almoco: document.getElementById("f-almoco").value,
+      lanche: document.getElementById("f-lanche").value,
+      jantar: document.getElementById("f-jantar").value,
+      ceia: document.getElementById("f-ceia").value,
+      observacao: document.getElementById("f-obs").value
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler((res) => {
+        btn.disabled = false;
+        btn.innerText = "Salvar Paciente";
+        if (res.success) {
+          showToast("Paciente salvo com sucesso!");
+          closeModal("modal-form");
+          onDateChange(); // Recarrega a lista do dia
+        } else {
+          showToast("Erro ao salvar: " + res.error, "error");
+        }
+      }).salvarPaciente(currentDate, paciente);
+    } else {
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerText = "Salvar Paciente";
+        showToast("Salvo localmente (modo Dev)!");
+        closeModal("modal-form");
+      }, 800);
+    }
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("open");
+  }
+
+</script>
+
+</body>
+</html>
