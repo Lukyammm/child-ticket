@@ -525,20 +525,20 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     }
   };
 
-  // Attach sound to DOM elements
-  function attachSounds() {
-    const interactables = document.querySelectorAll('.btn, .meal-btn, .edit-btn, .chip');
-    interactables.forEach(el => {
-      // Evita duplicar events (usa um hack simples de clonagem ou mark data attribute)
-      if (el.dataset.soundAttached) return;
-      el.dataset.soundAttached = "true";
-      
-      el.addEventListener('mouseenter', () => { SoundUX.init(); SoundUX.hover(); });
-      el.addEventListener('click', () => { SoundUX.init(); SoundUX.click(); });
-    });
-  }
+  // Event Delegation for Sounds (suporta elementos criados dinamicamente)
+  document.body.addEventListener('mouseover', (e) => {
+    if (e.target.closest('.btn, .meal-btn, .edit-btn, .chip, .xbtn, .profile-btn')) {
+      SoundUX.init();
+      SoundUX.hover();
+    }
+  });
 
-  document.body.addEventListener('click', () => { SoundUX.init(); }, { once: true });
+  document.body.addEventListener('click', (e) => {
+    SoundUX.init();
+    if (e.target.closest('.btn, .meal-btn, .edit-btn, .chip, .xbtn, .profile-btn')) {
+      SoundUX.click();
+    }
+  });
 
 
   let dataPacientes = [];
@@ -784,8 +784,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
       tbody.appendChild(tr);
     });
-    
-    attachSounds(); // attach to new rows
   }
 
   // Cores do perfil ativo, usadas na janela de impressão (documento separado,
