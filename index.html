@@ -136,11 +136,18 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
 /* Label Preview (Screen) */
 .label-preview-wrapper { background: var(--paper); padding: 20px; display: flex; justify-content: center; }
-.label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 3.5mm 4mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-start; font-family: Arial, sans-serif; color: #000; }
-.label-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-.label-paciente { font-size: 13px; font-weight: bold; margin-bottom: 4px; line-height: 1.3; }
-.label-refeicao { font-size: 15px; font-weight: bold; margin-bottom: 3px; text-transform: uppercase; }
-.label-dieta { font-size: 12px; font-weight: bold; }
+.label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 3mm 3mm 3mm 5.5mm; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: Arial, sans-serif; color: #000; }
+.label-preview::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5mm; background: var(--pri); }
+.label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #666; padding-bottom: 1.3mm; border-bottom: 0.35mm solid #e6e6e6; margin-bottom: 1.6mm; }
+.label-paciente { font-size: 10.5pt; font-weight: 800; line-height: 1.2; margin-bottom: 0.6mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label-diag { font-size: 7.8pt; color: #666; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label-diag:empty { display: none; }
+.label-refeicao-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.8mm; flex-wrap: wrap; }
+.label-refeicao { display: inline-block; background: var(--pri); color: #fff; font-size: 9pt; font-weight: 800; padding: 1mm 2.2mm; border-radius: 1mm; text-transform: uppercase; letter-spacing: 0.3pt; }
+.label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: var(--pri-d); border: 0.3mm solid var(--pri); border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
+.label-item { flex: 1; display: flex; align-items: center; font-size: 12.5pt; font-weight: 800; line-height: 1.22; overflow: hidden; }
+.label-obs { font-size: 7.3pt; font-style: italic; color: #666; padding-top: 1mm; margin-top: auto; border-top: 0.3mm dashed #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label-obs:empty { display: none; border-top: none; padding-top: 0; }
 
 /* Toasts */
 #toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 99; display: grid; gap: 8px; pointer-events: none; }
@@ -160,11 +167,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   @page { size: 104mm 56mm; margin: 0; padding: 0; }
   body * { visibility: hidden; }
   .label-preview, .label-preview * { visibility: visible; }
-  .label-preview { position: absolute; left: 0; top: 0; width: 104mm; height: 56mm; border: none; box-shadow: none; padding: 3mm 4mm; margin: 0; background: transparent; justify-content: flex-start; }
-  .label-header { font-size: 10pt; margin-bottom: 4pt; letter-spacing: 0.3pt; }
-  .label-paciente { font-size: 12pt; margin-bottom: 3pt; line-height: 1.3; }
-  .label-refeicao { font-size: 14pt; margin-bottom: 2pt; }
-  .label-dieta { font-size: 11pt; }
+  .label-preview { position: absolute; left: 0; top: 0; border: none; box-shadow: none; margin: 0; background: #fff; }
 }
 </style>
 </head>
@@ -242,13 +245,18 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     </div>
     <div class="label-preview-wrapper">
       <div class="label-preview" id="print-area">
-        <div class="label-header">
+        <div class="label-top">
           <span id="lbl-setor">Casa da Gestante</span>
           <span id="lbl-data"></span>
         </div>
         <div class="label-paciente" id="lbl-paciente"></div>
-        <div class="label-refeicao" id="lbl-refeicao"></div>
-        <div class="label-dieta" id="lbl-dieta"></div>
+        <div class="label-diag" id="lbl-diag"></div>
+        <div class="label-refeicao-row">
+          <span class="label-refeicao" id="lbl-refeicao"></span>
+          <span class="label-dieta-tag" id="lbl-dieta"></span>
+        </div>
+        <div class="label-item" id="lbl-item"></div>
+        <div class="label-obs" id="lbl-obs"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -536,38 +544,53 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       const tdDieta = document.createElement("td");
       tdDieta.innerHTML = `<span class="dieta-badge">${escapeHtml(p.dieta)}</span>`;
 
-      const renderMealBtn = (mealVal, mealName) => {
-        if (!mealVal) return '-';
-        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')">${escapeHtml(mealVal)}</button>`;
-      };
-
       tr.appendChild(tdInfo);
       tr.appendChild(tdDieta);
-      tr.innerHTML += `
-        <td>${renderMealBtn(p.desjejum, 'Desjejum 6H')}</td>
-        <td>${renderMealBtn(p.colacao, 'Colação 9H')}</td>
-        <td>${renderMealBtn(p.almoco, 'Almoço 12H')}</td>
-        <td>${renderMealBtn(p.lanche, 'Lanche 15H')}</td>
-        <td>${renderMealBtn(p.jantar, 'Jantar 18H')}</td>
-        <td>${renderMealBtn(p.ceia, 'Ceia 21H')}</td>
-        <td>${p.observacao ? escapeHtml(p.observacao) : '-'}</td>
-      `;
+
+      MEAL_CATEGORIES.forEach(cat => {
+        const td = document.createElement("td");
+        const val = p[cat.field];
+        td.innerHTML = val
+          ? `<button class="meal-btn" onclick="openPrintModal(${index}, '${cat.field}')">${escapeHtml(val)}</button>`
+          : '-';
+        tr.appendChild(td);
+      });
+
+      const tdObs = document.createElement("td");
+      tdObs.textContent = p.observacao ? p.observacao : '-';
+      tr.appendChild(tdObs);
+
       tbody.appendChild(tr);
     });
   }
 
+  // Cores do perfil ativo, usadas na janela de impressão (documento separado,
+  // sem acesso às custom properties --pri/--pri-d da página principal).
+  function getCoresPerfil() {
+    return currentPerfil === 'ONCOLOGICO'
+      ? { pri: '#c2255c', priD: '#99194a' }
+      : { pri: '#0e7a5f', priD: '#0a5a46' };
+  }
+
   // === Modal Print ===
-  function openPrintModal(index, mealName) {
+  function openPrintModal(index, field) {
     const p = dataPacientes[index];
+    const cat = MEAL_CATEGORIES.find(c => c.field === field);
+    const itemTexto = p[field];
+    if (!cat || !itemTexto) return;
+
     document.getElementById("lbl-setor").innerText = currentPerfil === 'ONCOLOGICO' ? 'Setor Oncológico' : 'Casa da Gestante';
     document.getElementById("lbl-data").innerText = currentDate;
     const pacienteStr = p.prontuario_nome.includes("-")
-      ? `Paciente: ${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}`
-      : `Paciente: ${p.prontuario_nome}`;
+      ? `${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}`
+      : p.prontuario_nome;
 
     document.getElementById("lbl-paciente").innerText = pacienteStr;
-    document.getElementById("lbl-refeicao").innerText = mealName;
+    document.getElementById("lbl-diag").innerText = p.diagnostico || '';
+    document.getElementById("lbl-refeicao").innerText = cat.printName;
     document.getElementById("lbl-dieta").innerText = p.dieta.toUpperCase();
+    document.getElementById("lbl-item").innerText = itemTexto;
+    document.getElementById("lbl-obs").innerText = p.observacao ? ('Obs: ' + p.observacao) : '';
 
     showToast("Etiqueta pronta para impressão");
     document.getElementById("modal-print").classList.add("open");
@@ -578,6 +601,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   // bloqueado pelo navegador. Abrir uma janela própria contorna essa restrição.
   function imprimirEtiqueta() {
     const conteudo = document.getElementById("print-area").innerHTML;
+    const cores = getCoresPerfil();
     const janela = window.open('', '_blank', 'width=480,height=380');
 
     if (!janela) {
@@ -591,11 +615,18 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   @page { size: 104mm 56mm; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; color: #000; }
-  .label-preview { width: 104mm; height: 56mm; padding: 3mm 4mm; display: flex; flex-direction: column; justify-content: flex-start; }
-  .label-header { display: flex; justify-content: space-between; font-size: 10pt; font-weight: bold; margin-bottom: 4pt; text-transform: uppercase; letter-spacing: 0.3pt; }
-  .label-paciente { font-size: 12pt; font-weight: bold; margin-bottom: 3pt; line-height: 1.3; }
-  .label-refeicao { font-size: 14pt; font-weight: bold; margin-bottom: 2pt; text-transform: uppercase; }
-  .label-dieta { font-size: 11pt; font-weight: bold; }
+  .label-preview { width: 104mm; height: 56mm; padding: 3mm 3mm 3mm 5.5mm; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .label-preview::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5mm; background: ${cores.pri}; }
+  .label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #666; padding-bottom: 1.3mm; border-bottom: 0.35mm solid #e6e6e6; margin-bottom: 1.6mm; }
+  .label-paciente { font-size: 10.5pt; font-weight: 800; line-height: 1.2; margin-bottom: 0.6mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label-diag { font-size: 7.8pt; color: #666; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label-diag:empty { display: none; }
+  .label-refeicao-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.8mm; flex-wrap: wrap; }
+  .label-refeicao { display: inline-block; background: ${cores.pri}; color: #fff; font-size: 9pt; font-weight: 800; padding: 1mm 2.2mm; border-radius: 1mm; text-transform: uppercase; letter-spacing: 0.3pt; }
+  .label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: ${cores.priD}; border: 0.3mm solid ${cores.pri}; border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
+  .label-item { flex: 1; display: flex; align-items: center; font-size: 12.5pt; font-weight: 800; line-height: 1.22; overflow: hidden; }
+  .label-obs { font-size: 7.3pt; font-style: italic; color: #666; padding-top: 1mm; margin-top: auto; border-top: 0.3mm dashed #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label-obs:empty { display: none; border-top: none; padding-top: 0; }
 </style>
 </head><body><div class="label-preview">${conteudo}</div></body></html>`);
     janela.document.close();
