@@ -545,6 +545,17 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     }
   };
 
+  // === Rastreamento Frontend (Tracker) ===
+  const Tracker = {
+    log(acao, detalhes = {}) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.logEvent(acao, currentPerfil, detalhes);
+      } else {
+        console.log(`[TRACKER] ${acao}`, currentPerfil, detalhes);
+      }
+    }
+  };
+
   // Event Delegation for Sounds (suporta elementos criados dinamicamente)
   document.body.addEventListener('mouseover', (e) => {
     if (e.target.closest('.btn, .meal-btn, .edit-btn, .chip, .xbtn, .profile-btn')) {
@@ -597,7 +608,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const dia = String(data.getDate()).padStart(2, '0');
     const mes = String(data.getMonth() + 1).padStart(2, '0');
     const ano = data.getFullYear();
-    return `${dia}/${mes}/${ano}`;
+    const nova = `${dia}/${mes}/${ano}`;
+    Tracker.log('NOVO_DIA_CRIADO', { data: nova });
+    currentDate = nova;
+    renderAll();
   }
 
   // Helper para amanhã (dia seguinte ao atual), formato dd/mm/yyyy
@@ -658,6 +672,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     currentPerfil = perfil;
     localStorage.setItem('cg_perfil', perfil);
     aplicarTemaPerfil();
+    Tracker.log('TROCA_PERFIL', { novoPerfil: perfil });
     showToast(perfil === 'ONCOLOGICO' ? 'Perfil Oncológico ativo' : 'Perfil Casa da Gestante ativo');
     loadDates();
   }
@@ -730,7 +745,13 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   }
 
   function onDateChange() {
-    currentDate = document.getElementById("date-select").value;
+    const s = document.getElementById("date-select");
+    currentDate = s.value;
+    Tracker.log('MUDOU_DATA_VISUALIZADA', { data: currentDate });
+    renderAll();
+  }
+
+  function renderAll() {
     const perfilLabel = currentPerfil === 'ONCOLOGICO' ? 'Oncológico' : 'Casa da Gestante';
     document.getElementById("table-title").innerText = `Pacientes do Dia (${perfilLabel}): ${currentDate}`;
 
@@ -892,6 +913,14 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   // === Modal Print (etiqueta única) ===
   let printAtual = null; // { p, cat } da etiqueta atualmente no preview
 
+  function imprimirEtiqueta() {
+    if (!printAtual) return;
+    
+    Tracker.log('IMPRESSAO_ETIQUETA', { paciente: printAtual.p.prontuario_nome, refeicao: printAtual.cat.label });
+    imprimirEtiquetas([ buildLabelInner(printAtual.p, printAtual.cat) ]);
+    closeModal('modal-print');
+  }
+
   function openPrintModal(index, field) {
     const p = dataPacientes[index];
     const cat = MEAL_CATEGORIES.find(c => c.field === field);
@@ -902,11 +931,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
     showToast("Etiqueta pronta para impressão");
     document.getElementById("modal-print").classList.add("open");
-  }
-
-  function imprimirEtiqueta() {
-    if (!printAtual) return;
-    imprimirEtiquetas([ buildLabelInner(printAtual.p, printAtual.cat) ]);
   }
 
   // === Impressão em lote ===
@@ -958,19 +982,20 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   }
 
   function imprimirLote() {
-    const labels = [];
+    const inners = [];
     MEAL_CATEGORIES.forEach(cat => {
       if (!loteMealsSelecionadas[cat.field]) return;
       dataPacientes.forEach(p => {
-        if (p[cat.field]) labels.push(buildLabelInner(p, cat));
+        if (p[cat.field]) inners.push(buildLabelInner(p, cat));
       });
     });
-    if (!labels.length) {
+    if (!inners.length) {
       showToast("Marque ao menos uma refeição com pacientes", "error");
       return;
     }
+    Tracker.log('IMPRESSAO_LOTE', { quantidade_etiquetas: inners.length });
     closeModal("modal-lote");
-    imprimirEtiquetas(labels);
+    imprimirEtiquetas(inners);
   }
 
   // === Novo dia (escolher uma data futura, ex: preparar o de amanhã) ===

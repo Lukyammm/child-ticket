@@ -224,12 +224,14 @@ function salvarPaciente(dataStr, paciente, perfil) {
     if (paciente.rowNumber) {
       // Edita linha existente usando rowNumber
       sheet.getRange(paciente.rowNumber, 1, 1, 10).setValues([rowData]);
+      logEvent('PACIENTE_EDITADO', perfil, { dataStr, rowNumber: paciente.rowNumber, paciente });
       return { success: true, rowNumber: paciente.rowNumber };
     } else {
       // Adiciona nova linha
       const lastRow = sheet.getLastRow();
       const newRowNumber = lastRow + 1;
       sheet.appendRow(rowData);
+      logEvent('PACIENTE_ADICIONADO', perfil, { dataStr, rowNumber: newRowNumber, paciente });
       return { success: true, rowNumber: newRowNumber };
     }
   } catch(e) {
@@ -250,7 +252,9 @@ function removerPaciente(dataStr, rowNumber, perfil) {
     if (!linha || linha < 2 || linha > sheet.getLastRow()) {
       return { success: false, error: 'Linha inválida.' };
     }
+    const valoresRemovidos = sheet.getRange(linha, 1, 1, 10).getValues()[0];
     sheet.deleteRow(linha);
+    logEvent('PACIENTE_REMOVIDO', perfil, { dataStr, rowNumber, pacienteNome: valoresRemovidos[0] });
     return { success: true };
   } catch(e) {
     return { success: false, error: e.toString() };
@@ -261,7 +265,9 @@ function removerPaciente(dataStr, rowNumber, perfil) {
 
 // Verifica a senha de acesso à área de administração
 function verificarSenhaAdmin(senha) {
-  return { success: senha === ADMIN_PASSWORD };
+  const sucesso = (senha === ADMIN_PASSWORD);
+  logEvent(sucesso ? 'LOGIN_ADMIN_SUCESSO' : 'LOGIN_ADMIN_FALHA', 'ADMIN', { senhaTentada: sucesso ? '***' : senha });
+  return { success: sucesso };
 }
 
 // Garante que a aba do catálogo de itens de dieta existe.
@@ -300,6 +306,7 @@ function adicionarItemDieta(item) {
     const ss = getSpreadsheet_();
     const sheet = getItensSheet_(ss);
     sheet.appendRow([item]);
+    logEvent('ITEM_DIETA_ADICIONADO', 'ADMIN', { item });
     return { success: true };
   } catch(e) {
     return { success: false, error: e.toString() };
@@ -316,11 +323,44 @@ function removerItemDieta(item) {
     for (let i = data.length - 1; i >= 1; i--) {
       if (data[i][0] === item) {
         sheet.deleteRow(i + 1);
+        logEvent('ITEM_DIETA_REMOVIDO', 'ADMIN', { item });
         break;
       }
     }
     return { success: true };
   } catch(e) {
     return { success: false, error: e.toString() };
+  }
+}
+
+// === Rastreabilidade (Logs) ===
+function logEvent(acao, perfil, detalhesObj) {
+  try {
+    const ss = getSpreadsheet_();
+    let sheet = ss.getSheetByName('SISTEMA_LOGS');
+    if (!sheet) {
+      sheet = ss.insertSheet('SISTEMA_LOGS');
+      sheet.appendRow(["Data / Hora", "Usuário", "Ação", "Perfil", "Detalhes"]);
+      sheet.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#333333").setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+      sheet.hideSheet(); // Oculta a aba para evitar que enfermeiros apaguem sem querer
+    }
+    
+    let usuario = "Anônimo";
+    try {
+      usuario = Session.getActiveUser().getEmail() || "Desconhecido";
+    } catch(e) {}
+    
+    const detalhes = detalhesObj ? JSON.stringify(detalhesObj) : "";
+    
+    sheet.appendRow([
+      new Date(),
+      usuario,
+      acao,
+      perfil || "-",
+      detalhes
+    ]);
+  } catch(e) {
+    // Falha silenciosa nos logs para não quebrar o fluxo principal
   }
 }
