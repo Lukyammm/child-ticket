@@ -23,8 +23,18 @@
   --body: 'Inter', system-ui, sans-serif;
 }
 
+body.theme-onco {
+  --ink: #2a1d24;
+  --paper: #f9f4f6;
+  --line: #ecdfe4;
+  --mut: #7a6670;
+  --pri: #c2255c;
+  --pri-d: #99194a;
+  --pri-s: #fbe6ee;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--body); background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+body { font-family: var(--body); background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh; transition: background-color .3s, color .3s; }
 
 /* Topbar */
 .topbar { position: sticky; top: 0; z-index: 40; background: rgba(244, 246, 243, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
@@ -38,11 +48,28 @@ body { font-family: var(--body); background: var(--paper); color: var(--ink); fo
 .date-selector { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; outline: none; }
 .date-selector:focus { border-color: var(--pri); }
 
-.btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: #fff; cursor: pointer; transition: .15s; display: inline-flex; align-items: center; justify-content: center; }
-.btn:hover { background: var(--paper); }
+/* Seletor de Perfil */
+.profile-switch { display: flex; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+.profile-btn { border: none; background: transparent; padding: 9px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 700; color: var(--mut); cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.profile-btn:hover { color: var(--ink); }
+.profile-btn.active { background: var(--pri); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+
+.lockbtn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--mut); cursor: pointer; display: grid; place-items: center; transition: .2s; }
+.lockbtn:hover { color: var(--pri); border-color: var(--pri); background: var(--pri-s); }
+
+.btn-loading { display: inline-flex; align-items: center; gap: 6px; }
+.spinner { animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: #fff; cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(0,0,0,0.1); transform: translate(-50%, -50%); transition: width .4s, height .4s; }
+.btn:active::before { width: 300px; height: 300px; }
+.btn:hover { background: var(--paper); transform: translateY(-1px); }
 .btn.primary { background: var(--pri); color: #fff; border-color: var(--pri); }
-.btn.primary:hover { background: var(--pri-d); }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn.primary:hover { background: var(--pri-d); box-shadow: 0 4px 12px rgba(14,122,95,0.3); transform: translateY(-2px); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn.btn-danger { color: #b3402e; border-color: #e9c4bd; }
+.btn.btn-danger:hover { background: #fbe9e6; border-color: #b3402e; }
 
 /* Layout & Table */
 main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
@@ -54,22 +81,25 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .tbl { width: 100%; border-collapse: collapse; text-align: left; }
 .tbl th { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--mut); padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--paper); }
 .tbl td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.tbl tbody tr:hover { background: #fafafa; }
+.tbl tbody tr { transition: background-color .2s ease-out; }
+.tbl tbody tr:hover { background: var(--pri-s); }
 .tbl tbody tr:last-child td { border-bottom: none; }
 
 .paciente-nome { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
 .paciente-diag { font-size: 12px; color: var(--mut); }
 .dieta-badge { display: inline-block; background: var(--pri-s); color: var(--pri-d); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
 
-.meal-btn { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; display: block; width: 100%; text-align: left; margin-bottom: 4px; }
-.meal-btn:hover { border-color: var(--pri); color: var(--pri-d); background: var(--pri-s); }
+.meal-btn { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: block; width: 100%; text-align: left; margin-bottom: 4px; position: relative; overflow: hidden; }
+.meal-btn::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(14, 122, 95, 0.15); transform: translate(-50%, -50%); transition: width .4s, height .4s; }
+.meal-btn:active::after { width: 200px; height: 200px; }
+.meal-btn:hover { border-color: var(--pri); color: var(--pri-d); background: var(--pri-s); transform: translateX(2px); }
 .meal-btn:last-child { margin-bottom: 0; }
 
 /* Modal */
-.overlay { position: fixed; inset: 0; background: rgba(29, 42, 36, 0.45); z-index: 60; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
-.overlay.open { display: flex; }
-.modal { background: #fff; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; animation: up .2s ease-out; position: relative; margin: auto; }
-@keyframes up { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.overlay { position: fixed; inset: 0; background: rgba(29, 42, 36, 0); z-index: 60; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; transition: background-color .3s ease-out; backdrop-filter: blur(0px); }
+.overlay.open { display: flex; background: rgba(29, 42, 36, 0.45); backdrop-filter: blur(4px); }
+.modal { background: #fff; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; animation: modalUp .3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; margin: auto; }
+@keyframes modalUp { from { transform: translateY(30px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
 .modal-header h3 { font-size: 16px; font-weight: 600; }
 .xbtn { background: none; border: none; font-size: 20px; color: var(--mut); cursor: pointer; }
@@ -83,33 +113,82 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 
+/* Chips (seleção múltipla de itens de dieta) — agrupados em acordeão por refeição */
+.meal-group { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: #fff; }
+.meal-group-header { display: flex; align-items: center; gap: 8px; padding: 11px 14px; cursor: pointer; user-select: none; background: var(--paper); transition: background-color .15s; }
+.meal-group-header:hover { background: var(--pri-s); }
+.meal-group-header .mg-label { font-weight: 600; font-size: 13.5px; flex: 1; }
+.meal-group-header .mg-count { background: var(--pri); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; min-width: 18px; text-align: center; }
+.meal-group-header .mg-chevron { color: var(--mut); transition: transform .2s ease; flex-shrink: 0; }
+.meal-group.open .mg-chevron { transform: rotate(180deg); }
+.meal-group-summary { padding: 0 14px 10px; font-size: 12px; color: var(--mut); line-height: 1.5; }
+.meal-group-body { padding: 12px 14px 14px; border-top: 1px solid var(--line); }
+.chip-search { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-family: inherit; font-size: 12.5px; outline: none; margin-bottom: 10px; transition: .15s; }
+.chip-search:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; max-height: 180px; overflow-y: auto; padding-right: 2px; }
+.chips::-webkit-scrollbar { width: 6px; }
+.chips::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.chip { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 6px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: .15s cubic-bezier(0.4, 0, 0.2, 1); }
+.chip:hover { border-color: var(--pri); color: var(--pri-d); }
+.chip.on { background: var(--pri); border-color: var(--pri); color: #fff; transform: scale(1.03); }
+.chip-empty { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
+.chip-noresult { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
+.chip-custom { background: var(--pri); border-color: var(--pri); color: #fff; }
+.chip-texto-row { display: flex; gap: 6px; margin-top: 4px; }
+.chip-texto-extra { margin-bottom: 0; flex: 1; }
+.chip-texto-add { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 8px; width: 34px; font-size: 16px; font-weight: 700; cursor: pointer; transition: .15s; }
+.chip-texto-add:hover { border-color: var(--pri); color: var(--pri-d); }
+
+/* Painel de Administração */
+.admin-panel-desc { font-size: 13px; color: var(--mut); margin-bottom: 18px; line-height: 1.5; }
+.admin-add { display: flex; gap: 8px; margin-bottom: 18px; }
+.admin-add input { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fff; font-family: inherit; font-size: 14px; outline: none; transition: .15s; }
+.admin-add input:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
+.admin-add input::placeholder { color: var(--mut); opacity: 0.7; }
+.admin-add button { white-space: nowrap; }
+.admin-count { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--mut); margin-bottom: 10px; }
+.admin-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-tag { display: inline-flex; align-items: center; gap: 7px; background: var(--pri-s); color: var(--pri-d); padding: 7px 10px 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.admin-tag button { border: none; background: rgba(0,0,0,.08); color: inherit; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-size: 12px; line-height: 1; flex-shrink: 0; transition: .15s; }
+.admin-tag button:hover { background: rgba(0,0,0,.2); }
+.admin-empty { text-align: center; padding: 32px 16px; border: 1.5px dashed var(--line); border-radius: 12px; color: var(--mut); }
+.admin-empty svg { margin-bottom: 8px; opacity: .6; }
+.admin-empty p { font-size: 13px; }
+
 /* Label Preview (Screen) */
 .label-preview-wrapper { background: var(--paper); padding: 20px; display: flex; justify-content: center; }
-.label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 5mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; font-family: Arial, sans-serif; color: #000; }
-.label-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
-.label-paciente { font-size: 16px; font-weight: bold; margin-bottom: 8px; line-height: 1.2; }
-.label-refeicao { font-size: 18px; font-weight: bold; margin-bottom: 6px; text-transform: uppercase; }
-.label-dieta { font-size: 16px; font-weight: bold; }
+.label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 3mm 3mm 3mm 5.5mm; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: Arial, sans-serif; color: #000; }
+.label-preview::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5mm; background: var(--pri); }
+.label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #666; padding-bottom: 1.3mm; border-bottom: 0.35mm solid #e6e6e6; margin-bottom: 1.6mm; }
+.label-paciente { font-size: 10.5pt; font-weight: 800; line-height: 1.2; margin-bottom: 0.6mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label-diag { font-size: 7.8pt; color: #666; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label-diag:empty { display: none; }
+.label-refeicao-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.8mm; flex-wrap: wrap; }
+.label-refeicao { display: inline-block; background: var(--pri); color: #fff; font-size: 9pt; font-weight: 800; padding: 1mm 2.2mm; border-radius: 1mm; text-transform: uppercase; letter-spacing: 0.3pt; }
+.label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: var(--pri-d); border: 0.3mm solid var(--pri); border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
+.label-item { flex: 1; display: flex; align-items: center; font-size: 12.5pt; font-weight: 800; line-height: 1.22; overflow: hidden; }
+.label-obs { font-size: 7.3pt; font-style: italic; color: #666; padding-top: 1mm; margin-top: auto; border-top: 0.3mm dashed #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label-obs:empty { display: none; border-top: none; padding-top: 0; }
 
 /* Toasts */
 #toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 99; display: grid; gap: 8px; pointer-events: none; }
-.toast { background: var(--ink); color: #fff; border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: up .2s ease-out; }
+.toast { background: var(--ink); color: #fff; border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: slideUp .3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; }
+@keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .toast.success { background: var(--pri); }
 .toast.error { background: #b3402e; }
+.toast svg { width: 18px; height: 18px; flex-shrink: 0; }
 
 .loader { text-align: center; padding: 40px; color: var(--mut); font-weight: 500; }
+.loader::after { content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--mut); margin-left: 4px; animation: dots 1.4s infinite; }
+@keyframes dots { 0%, 20%, 50%, 80%, 100% { opacity: 1; } 40% { opacity: 0.2; } 60% { opacity: 0.5; } }
 .edit-btn { background: none; border: none; color: var(--pri); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; margin-top: 6px; }
 
 /* Print Styles */
 @media print {
-  @page { size: 104mm 56mm; margin: 0; }
+  @page { size: 104mm 56mm; margin: 0; padding: 0; }
   body * { visibility: hidden; }
   .label-preview, .label-preview * { visibility: visible; }
-  .label-preview { position: absolute; left: 0; top: 0; width: 104mm; height: 56mm; border: none; box-shadow: none; padding: 3mm 5mm; margin: 0; background: transparent; justify-content: center; }
-  .label-header { font-size: 12pt; margin-bottom: 6pt; }
-  .label-paciente { font-size: 14pt; margin-bottom: 6pt; }
-  .label-refeicao { font-size: 16pt; margin-bottom: 4pt; }
-  .label-dieta { font-size: 14pt; }
+  .label-preview { position: absolute; left: 0; top: 0; border: none; box-shadow: none; margin: 0; background: #fff; }
 }
 </style>
 </head>
@@ -118,16 +197,39 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 <header class="topbar">
   <div class="in">
     <a class="brand" href="#">
-      <span class="dot">
+      <span class="dot" id="brand-dot">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </span>
-      <span><b>Casa da Gestante</b><small>Controle de Dietas</small></span>
+      <span><b id="brand-title">Casa da Gestante</b><small>Controle de Dietas</small></span>
     </a>
+
+    <div class="profile-switch" role="tablist" aria-label="Seletor de Perfil">
+      <button type="button" class="profile-btn active" id="profile-btn-gestante" onclick="trocarPerfil('GESTANTE')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        Casa da Gestante
+      </button>
+      <button type="button" class="profile-btn" id="profile-btn-onco" onclick="trocarPerfil('ONCOLOGICO')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-2.2 2.8-2.2 6.2 0 9 2.2-2.8 2.2-6.2 0-9z"/><path d="M12 12l-5.5 9"/><path d="M12 12l5.5 9"/></svg>
+        Oncológico
+      </button>
+    </div>
+
     <div class="top-actions">
       <select id="date-select" class="date-selector" onchange="onDateChange()">
         <option value="">Carregando datas...</option>
       </select>
+      <span style="position:relative;display:inline-block">
+        <button class="btn" title="Escolher outro dia (ex: preparar o de amanhã)" tabindex="-1">+ Novo dia</button>
+        <input type="date" id="novo-dia-input" title="Escolher outro dia (ex: preparar o de amanhã)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="onNovoDiaEscolhido()">
+      </span>
       <button class="btn primary" onclick="openFormModal()">+ Adicionar Paciente</button>
+      <button class="btn" title="Imprimir várias etiquetas de uma vez" onclick="abrirImpressaoLote()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir em lote
+      </button>
+      <button class="lockbtn" title="Área de administração" onclick="abrirLoginAdmin()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
     </div>
   </div>
 </header>
@@ -149,10 +251,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
             <th>Lanche (15h)</th>
             <th>Jantar (18h)</th>
             <th>Ceia (21h)</th>
+            <th>Observação</th>
           </tr>
         </thead>
         <tbody id="tb-pacientes">
-          <tr><td colspan="8" class="loader">Carregando dados...</td></tr>
+          <tr><td colspan="9" class="loader">Carregando dados...</td></tr>
         </tbody>
       </table>
     </div>
@@ -171,18 +274,44 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     </div>
     <div class="label-preview-wrapper">
       <div class="label-preview" id="print-area">
-        <div class="label-header">
-          <span>Casa da Gestante</span>
+        <div class="label-top">
+          <span id="lbl-setor">Casa da Gestante</span>
           <span id="lbl-data"></span>
         </div>
         <div class="label-paciente" id="lbl-paciente"></div>
-        <div class="label-refeicao" id="lbl-refeicao"></div>
-        <div class="label-dieta" id="lbl-dieta"></div>
+        <div class="label-diag" id="lbl-diag"></div>
+        <div class="label-refeicao-row">
+          <span class="label-refeicao" id="lbl-refeicao"></span>
+          <span class="label-dieta-tag" id="lbl-dieta"></span>
+        </div>
+        <div class="label-item" id="lbl-item"></div>
+        <div class="label-obs" id="lbl-obs"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-print')">Cancelar</button>
-      <button class="btn primary" onclick="window.print()">Imprimir Etiqueta</button>
+      <button class="btn primary" onclick="imprimirEtiqueta()">Imprimir Etiqueta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Impressão em Lote -->
+<div class="overlay" id="modal-lote">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-header">
+      <h3>Imprimir em lote</h3>
+      <button class="xbtn" onclick="closeModal('modal-lote')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px; color:var(--mut); margin-bottom:16px; line-height:1.5;">
+        Data: <b id="lote-data-label"></b>. Marque as refeições que quer imprimir — o sistema gera uma etiqueta para cada paciente que tiver aquela refeição preenchida.
+      </p>
+      <div id="lote-meals" class="chips"></div>
+      <p id="lote-resumo" style="font-size:12.5px; color:var(--mut); margin-top:14px;"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeModal('modal-lote')">Cancelar</button>
+      <button type="button" class="btn primary" id="btn-lote-imprimir" onclick="imprimirLote()">Imprimir selecionadas</button>
     </div>
   </div>
 </div>
@@ -214,31 +343,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         
         <hr style="border:0; border-top:1px solid var(--line); margin: 15px 0;">
         <p style="font-weight:600; margin-bottom: 10px; color: var(--mut); font-size:12px; text-transform:uppercase;">Refeições do Dia</p>
+        <p style="font-size:12px; color:var(--mut); margin-bottom:14px;">Clique para selecionar vários itens cadastrados, ou digite algo personalizado no campo de texto.</p>
 
-        <div class="field">
-          <label>Desjejum (6h)</label>
-          <input type="text" id="f-desjejum" placeholder="Detalhes do desjejum">
-        </div>
-        <div class="field">
-          <label>Colação (9h)</label>
-          <input type="text" id="f-colacao" placeholder="Detalhes da colação">
-        </div>
-        <div class="field">
-          <label>Almoço (12h)</label>
-          <input type="text" id="f-almoco" placeholder="Detalhes do almoço">
-        </div>
-        <div class="field">
-          <label>Lanche (15h)</label>
-          <input type="text" id="f-lanche" placeholder="Detalhes do lanche">
-        </div>
-        <div class="field">
-          <label>Jantar (18h)</label>
-          <input type="text" id="f-jantar" placeholder="Detalhes do jantar">
-        </div>
-        <div class="field">
-          <label>Ceia (21h)</label>
-          <input type="text" id="f-ceia" placeholder="Detalhes da ceia">
-        </div>
+        <div id="meal-fields"></div>
+
         <div class="field">
           <label>Observação</label>
           <textarea id="f-obs" placeholder="Observações adicionais (opcional)" style="min-height:60px"></textarea>
@@ -246,8 +354,50 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       </form>
     </div>
     <div class="modal-footer">
+      <button type="button" class="btn btn-danger" id="btn-alta" style="margin-right:auto; display:none" onclick="darAltaPaciente()">Dar alta</button>
       <button type="button" class="btn" onclick="closeModal('modal-form')">Cancelar</button>
       <button type="submit" form="paciente-form" class="btn primary" id="btn-salvar">Salvar Paciente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Login Admin -->
+<div class="overlay" id="modal-admin-login">
+  <div class="modal" style="max-width: 380px;">
+    <div class="modal-header">
+      <h3>Área de Administração</h3>
+      <button class="xbtn" onclick="closeModal('modal-admin-login')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="admin-login-form" onsubmit="confirmarSenhaAdmin(event)">
+        <div class="field">
+          <label>Senha de administrador</label>
+          <input type="password" id="f-admin-senha" required placeholder="Digite a senha" autofocus>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeModal('modal-admin-login')">Cancelar</button>
+      <button type="submit" form="admin-login-form" class="btn primary" id="btn-admin-entrar">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Painel Admin (Catálogo de Itens de Dieta) -->
+<div class="overlay" id="modal-admin">
+  <div class="modal" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3>Itens de Dieta</h3>
+      <button class="xbtn" onclick="closeModal('modal-admin')">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="admin-panel-desc">Esses itens ficam disponíveis para seleção rápida em todas as refeições (Desjejum, Colação, Almoço, Lanche, Jantar e Ceia), para os dois perfis.</p>
+      <div id="admin-body">
+        <div class="loader">Carregando catálogo...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn primary" onclick="closeModal('modal-admin')">Concluído</button>
     </div>
   </div>
 </div>
@@ -255,6 +405,33 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 <script>
   let dataPacientes = [];
   let currentDate = "";
+  let currentPerfil = localStorage.getItem('cg_perfil') || 'GESTANTE';
+  let catalogoItens = []; // lista única de itens, compartilhada entre refeições e perfis
+  let mealFormState = {};
+
+  const MEAL_CATEGORIES = [
+    { field: 'desjejum', label: 'Desjejum (6h)', printName: 'Desjejum 6H' },
+    { field: 'colacao', label: 'Colação (9h)', printName: 'Colação 9H' },
+    { field: 'almoco', label: 'Almoço (12h)', printName: 'Almoço 12H' },
+    { field: 'lanche', label: 'Lanche (15h)', printName: 'Lanche 15H' },
+    { field: 'jantar', label: 'Jantar (18h)', printName: 'Jantar 18H' },
+    { field: 'ceia', label: 'Ceia (21h)', printName: 'Ceia 21H' }
+  ];
+
+  const MOCK_CATALOGO = ['CAFÉ COMPLETO', 'CAFÉ COMPLETO DM', 'MINGAU DE AVEIA', 'SUCO', 'SUCO DM', 'VITAMINA', 'VITAMINA DM', 'GERAL', 'GERAL HAS DM', 'BRANDA', 'BISCOITO', 'MINGAU'];
+
+  const SPINNER_SVG = '<svg class="spinner" viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="40 100"/></svg>';
+
+  // Escapa texto para inserção segura em HTML (evita quebra de layout / injeção
+  // caso um nome ou item contenha caracteres como < > & " ').
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   // Helper para hoje
   function getDataAtual() {
@@ -265,64 +442,153 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     return `${dia}/${mes}/${ano}`;
   }
 
+  // Helper para amanhã (dia seguinte ao atual), formato dd/mm/yyyy
+  function getDataAmanha() {
+    const data = new Date();
+    data.setDate(data.getDate() + 1);
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  // Converte "dd/mm/yyyy" para "yyyy-mm-dd" (formato aceito por <input type="date">).
+  function dataBRParaISO(dataBR) {
+    const [dia, mes, ano] = dataBR.split('/');
+    return `${ano}-${mes}-${dia}`;
+  }
+
   // Toasts
   function showToast(msg, type='success') {
     const c = document.getElementById('toasts');
     const t = document.createElement('div');
     t.className = `toast ${type}`;
-    t.innerText = msg;
+
+    let icon = '';
+    if (type === 'success') {
+      icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    } else if (type === 'error') {
+      icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+    }
+
+    t.innerHTML = icon + '<span>' + msg + '</span>';
     c.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 3000);
+
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateY(10px)';
+      setTimeout(() => t.remove(), 300);
+    }, 3000);
   }
 
   // Init
   document.addEventListener("DOMContentLoaded", () => {
+    aplicarTemaPerfil();
+    loadCatalogo();
     loadDates();
+    // Sugere amanhã como valor inicial do seletor "+ Novo dia".
+    document.getElementById("novo-dia-input").value = dataBRParaISO(getDataAmanha());
   });
+
+  // === Perfis ===
+  function trocarPerfil(perfil) {
+    if (perfil === currentPerfil) return;
+    currentPerfil = perfil;
+    localStorage.setItem('cg_perfil', perfil);
+    aplicarTemaPerfil();
+    showToast(perfil === 'ONCOLOGICO' ? 'Perfil Oncológico ativo' : 'Perfil Casa da Gestante ativo');
+    loadDates();
+  }
+
+  function aplicarTemaPerfil() {
+    const isOnco = currentPerfil === 'ONCOLOGICO';
+    document.body.classList.toggle('theme-onco', isOnco);
+    document.getElementById('profile-btn-gestante').classList.toggle('active', !isOnco);
+    document.getElementById('profile-btn-onco').classList.toggle('active', isOnco);
+    document.getElementById('brand-title').innerText = isOnco ? 'Setor Oncológico' : 'Casa da Gestante';
+  }
+
+  // === Catálogo de Itens de Dieta ===
+  function loadCatalogo() {
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler((cat) => { catalogoItens = cat; }).getItensDieta();
+    } else {
+      catalogoItens = [...MOCK_CATALOGO];
+    }
+  }
 
   function loadDates() {
     if (typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler(renderDates).getDatasDisponiveis();
+      google.script.run.withSuccessHandler(renderDates).getDatasDisponiveis(currentPerfil);
     } else {
-      setTimeout(() => renderDates(['17/07/2026', '18/07/2026']), 300);
+      const mockDates = currentPerfil === 'ONCOLOGICO' ? ['17/07/2026'] : ['17/07/2026', '18/07/2026'];
+      setTimeout(() => renderDates(mockDates), 300);
     }
+  }
+
+  // Converte "dd/mm/yyyy" em Date para ordenação. Retorna null se não bater o formato.
+  function parseDataBR(str) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((str || '').trim());
+    if (!m) return null;
+    return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
   }
 
   function renderDates(dates) {
     const sel = document.getElementById("date-select");
     sel.innerHTML = "";
-    
-    // Garantir que a data atual está na lista, se não, adiciona
+
+    // Garantir que a data atual e a de amanhã estão na lista, se não, adiciona
     const hoje = getDataAtual();
+    const amanha = getDataAmanha();
     if (!dates.includes(hoje)) dates.push(hoje);
-    
-    // Sort basic (assume formato dd/mm/yyyy) - simplify to just populate
+    if (!dates.includes(amanha)) dates.push(amanha);
+
+    // Ordena por data (mais recente primeiro); datas em formato inesperado vão para o fim.
+    dates.sort((a, b) => {
+      const da = parseDataBR(a), db = parseDataBR(b);
+      if (da && db) return db - da;
+      if (da) return -1;
+      if (db) return 1;
+      return a.localeCompare(b);
+    });
+
     dates.forEach(d => {
       const opt = document.createElement("option");
       opt.value = d;
       opt.innerText = d;
       sel.appendChild(opt);
     });
-    
-    sel.value = hoje;
+
+    // Prioridade padrão: sempre o próximo dia (amanhã).
+    sel.value = amanha;
+    // Setar .value por código NÃO dispara o evento onchange, então precisamos
+    // carregar os pacientes do dia manualmente aqui. Sem isto, a tabela nunca
+    // puxa os dados da planilha ao abrir a página ou ao trocar de perfil.
     onDateChange();
   }
 
   function onDateChange() {
     currentDate = document.getElementById("date-select").value;
-    document.getElementById("table-title").innerText = `Pacientes do Dia: ${currentDate}`;
-    
+    const perfilLabel = currentPerfil === 'ONCOLOGICO' ? 'Oncológico' : 'Casa da Gestante';
+    document.getElementById("table-title").innerText = `Pacientes do Dia (${perfilLabel}): ${currentDate}`;
+
     const tbody = document.getElementById("tb-pacientes");
-    tbody.innerHTML = "<tr><td colspan='8' class='loader'>Buscando pacientes...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='9' class='loader'>Buscando pacientes...</td></tr>";
 
     if (typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler(renderTable).getPacientesPorData(currentDate);
+      google.script.run.withSuccessHandler(renderTable).getPacientesPorData(currentDate, currentPerfil);
     } else {
       setTimeout(() => {
-        renderTable([
-          { id: 1, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
-          { id: 2, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
-        ]);
+        if (currentPerfil === 'ONCOLOGICO') {
+          renderTable([
+            { rowNumber: 2, prontuario_nome: "40521 - Carlos Eduardo Menezes", diagnostico: "Oncológico", dieta: "Branda Hipercalórica", desjejum: "MINGAU DE AVEIA + FRUTA", colacao: "SUCO ADOÇADO", almoco: "BRANDA COM FRANGO DESFIADO", lanche: "VITAMINA HIPERCALÓRICA", jantar: "SOPA CREMOSA", ceia: "MINGAU + COMPLEMENTO", observacao: "" }
+          ]);
+        } else {
+          renderTable([
+            { rowNumber: 2, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
+            { rowNumber: 3, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
+          ]);
+        }
       }, 500);
     }
   }
@@ -333,55 +599,425 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     tbody.innerHTML = "";
 
     if (pacientes.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='8' class='loader'>Nenhum paciente encontrado para esta data. Adicione um novo!</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='9' class='loader'>Nenhum paciente encontrado para esta data. Adicione um novo!</td></tr>";
       return;
     }
 
     pacientes.forEach((p, index) => {
       const tr = document.createElement("tr");
-      
+
       const tdInfo = document.createElement("td");
       tdInfo.innerHTML = `
-        <div class="paciente-nome">${p.prontuario_nome}</div>
-        <div class="paciente-diag">${p.diagnostico}</div>
+        <div class="paciente-nome">${escapeHtml(p.prontuario_nome)}</div>
+        <div class="paciente-diag">${escapeHtml(p.diagnostico)}</div>
         <button class="edit-btn" onclick="openFormModal(${index})">Editar paciente</button>
       `;
-      
-      const tdDieta = document.createElement("td");
-      tdDieta.innerHTML = `<span class="dieta-badge">${p.dieta}</span>`;
 
-      const renderMealBtn = (mealVal, mealName) => {
-        if (!mealVal) return '-';
-        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')">${mealVal}</button>`;
-      };
+      const tdDieta = document.createElement("td");
+      tdDieta.innerHTML = `<span class="dieta-badge">${escapeHtml(p.dieta)}</span>`;
 
       tr.appendChild(tdInfo);
       tr.appendChild(tdDieta);
-      tr.innerHTML += `
-        <td>${renderMealBtn(p.desjejum, 'Desjejum 6H')}</td>
-        <td>${renderMealBtn(p.colacao, 'Colação 9H')}</td>
-        <td>${renderMealBtn(p.almoco, 'Almoço 12H')}</td>
-        <td>${renderMealBtn(p.lanche, 'Lanche 15H')}</td>
-        <td>${renderMealBtn(p.jantar, 'Jantar 18H')}</td>
-        <td>${renderMealBtn(p.ceia, 'Ceia 21H')}</td>
-      `;
+
+      MEAL_CATEGORIES.forEach(cat => {
+        const td = document.createElement("td");
+        const val = p[cat.field];
+        td.innerHTML = val
+          ? `<button class="meal-btn" onclick="openPrintModal(${index}, '${cat.field}')">${escapeHtml(val)}</button>`
+          : '-';
+        tr.appendChild(td);
+      });
+
+      const tdObs = document.createElement("td");
+      tdObs.textContent = p.observacao ? p.observacao : '-';
+      tr.appendChild(tdObs);
+
       tbody.appendChild(tr);
     });
   }
 
-  // === Modal Print ===
-  function openPrintModal(index, mealName) {
-    const p = dataPacientes[index];
-    document.getElementById("lbl-data").innerText = currentDate;
-    const pacienteStr = p.prontuario_nome.includes("-") 
-      ? `Paciente: ${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}` 
-      : `Paciente: ${p.prontuario_nome}`;
-    
-    document.getElementById("lbl-paciente").innerText = pacienteStr;
-    document.getElementById("lbl-refeicao").innerText = mealName;
-    document.getElementById("lbl-dieta").innerText = p.dieta.toUpperCase();
+  // Cores do perfil ativo, usadas na janela de impressão (documento separado,
+  // sem acesso às custom properties --pri/--pri-d da página principal).
+  function getCoresPerfil() {
+    return currentPerfil === 'ONCOLOGICO'
+      ? { pri: '#c2255c', priD: '#99194a' }
+      : { pri: '#0e7a5f', priD: '#0a5a46' };
+  }
 
+  // Monta o HTML interno de uma etiqueta (o conteúdo do .label-preview) para um
+  // paciente e uma refeição. Usado tanto no preview em tela quanto na impressão
+  // única e em lote, garantindo que os três fiquem sempre idênticos.
+  // A data é rotulada como "SERVIR" — é o dia em que a refeição será consumida,
+  // o que evita a confusão de "comida vencida" ao imprimir hoje a refeição de amanhã.
+  function buildLabelInner(p, cat) {
+    const setor = currentPerfil === 'ONCOLOGICO' ? 'Setor Oncológico' : 'Casa da Gestante';
+    const pacienteStr = p.prontuario_nome.includes("-")
+      ? `${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}`
+      : p.prontuario_nome;
+    const obs = p.observacao ? ('Obs: ' + p.observacao) : '';
+    return `
+        <div class="label-top">
+          <span>${escapeHtml(setor)}</span>
+          <span>SERVIR ${escapeHtml(currentDate)}</span>
+        </div>
+        <div class="label-paciente">${escapeHtml(pacienteStr)}</div>
+        <div class="label-diag">${escapeHtml(p.diagnostico || '')}</div>
+        <div class="label-refeicao-row">
+          <span class="label-refeicao">${escapeHtml(cat.printName)}</span>
+          <span class="label-dieta-tag">${escapeHtml((p.dieta || '').toUpperCase())}</span>
+        </div>
+        <div class="label-item">${escapeHtml(p[cat.field] || '')}</div>
+        <div class="label-obs">${escapeHtml(obs)}</div>`;
+  }
+
+  // CSS compartilhado das etiquetas na janela de impressão. `pageBreak` ativa a
+  // quebra de página por etiqueta (usado no lote).
+  function buildLabelCss(cores, pageBreak) {
+    return `
+  @page { size: 104mm 56mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; color: #000; }
+  .label-preview { width: 104mm; height: 56mm; padding: 3mm 3mm 3mm 5.5mm; position: relative; overflow: hidden; display: flex; flex-direction: column; ${pageBreak ? 'page-break-after: always;' : ''} }
+  .label-preview:last-child { page-break-after: auto; }
+  .label-preview::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5mm; background: ${cores.pri}; }
+  .label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #666; padding-bottom: 1.3mm; border-bottom: 0.35mm solid #e6e6e6; margin-bottom: 1.6mm; }
+  .label-paciente { font-size: 10.5pt; font-weight: 800; line-height: 1.2; margin-bottom: 0.6mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label-diag { font-size: 7.8pt; color: #666; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label-diag:empty { display: none; }
+  .label-refeicao-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.8mm; flex-wrap: wrap; }
+  .label-refeicao { display: inline-block; background: ${cores.pri}; color: #fff; font-size: 9pt; font-weight: 800; padding: 1mm 2.2mm; border-radius: 1mm; text-transform: uppercase; letter-spacing: 0.3pt; }
+  .label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: ${cores.priD}; border: 0.3mm solid ${cores.pri}; border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
+  .label-item { flex: 1; display: flex; align-items: center; font-size: 12.5pt; font-weight: 800; line-height: 1.22; overflow: hidden; }
+  .label-obs { font-size: 7.3pt; font-style: italic; color: #666; padding-top: 1mm; margin-top: auto; border-top: 0.3mm dashed #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label-obs:empty { display: none; border-top: none; padding-top: 0; }`;
+  }
+
+  // Abre uma janela nova com uma ou mais etiquetas e dispara a impressão.
+  // O app roda dentro de um iframe protegido pelo Apps Script, onde window.print()
+  // costuma ser bloqueado; abrir uma janela própria contorna essa restrição.
+  function imprimirEtiquetas(labelsInner) {
+    if (!labelsInner.length) {
+      showToast("Nenhuma etiqueta para imprimir", "error");
+      return;
+    }
+    const cores = getCoresPerfil();
+    const janela = window.open('', '_blank', 'width=480,height=420');
+    if (!janela) {
+      showToast("Permita pop-ups no navegador para imprimir", "error");
+      return;
+    }
+
+    const corpo = labelsInner.map(inner => `<div class="label-preview">${inner}</div>`).join('');
+    janela.document.write(`<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Etiquetas</title>
+<style>${buildLabelCss(cores, labelsInner.length > 1)}</style>
+</head><body>${corpo}</body></html>`);
+    janela.document.close();
+
+    setTimeout(() => { janela.focus(); janela.print(); }, 350);
+    janela.onafterprint = () => janela.close();
+  }
+
+  // === Modal Print (etiqueta única) ===
+  let printAtual = null; // { p, cat } da etiqueta atualmente no preview
+
+  function openPrintModal(index, field) {
+    const p = dataPacientes[index];
+    const cat = MEAL_CATEGORIES.find(c => c.field === field);
+    if (!cat || !p[field]) return;
+
+    printAtual = { p, cat };
+    document.getElementById("print-area").innerHTML = buildLabelInner(p, cat);
+
+    showToast("Etiqueta pronta para impressão");
     document.getElementById("modal-print").classList.add("open");
+  }
+
+  function imprimirEtiqueta() {
+    if (!printAtual) return;
+    imprimirEtiquetas([ buildLabelInner(printAtual.p, printAtual.cat) ]);
+  }
+
+  // === Impressão em lote ===
+  let loteMealsSelecionadas = {}; // field -> bool
+
+  function abrirImpressaoLote() {
+    if (!dataPacientes.length) {
+      showToast("Nenhum paciente nesta data para imprimir", "error");
+      return;
+    }
+    loteMealsSelecionadas = {};
+    document.getElementById("lote-data-label").innerText = currentDate;
+    renderLoteMeals();
+    document.getElementById("modal-lote").classList.add("open");
+  }
+
+  function renderLoteMeals() {
+    const cont = document.getElementById("lote-meals");
+    cont.innerHTML = "";
+    MEAL_CATEGORIES.forEach(cat => {
+      const qtd = dataPacientes.filter(p => p[cat.field]).length;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip" + (loteMealsSelecionadas[cat.field] ? " on" : "");
+      btn.textContent = `${cat.label} (${qtd})`;
+      btn.disabled = qtd === 0;
+      if (qtd === 0) btn.style.opacity = "0.4";
+      btn.onclick = () => {
+        loteMealsSelecionadas[cat.field] = !loteMealsSelecionadas[cat.field];
+        renderLoteMeals();
+      };
+      cont.appendChild(btn);
+    });
+    atualizarResumoLote();
+  }
+
+  function contarEtiquetasLote() {
+    let total = 0;
+    MEAL_CATEGORIES.forEach(cat => {
+      if (loteMealsSelecionadas[cat.field]) total += dataPacientes.filter(p => p[cat.field]).length;
+    });
+    return total;
+  }
+
+  function atualizarResumoLote() {
+    const total = contarEtiquetasLote();
+    document.getElementById("lote-resumo").innerText =
+      total === 0 ? "" : `${total} etiqueta${total === 1 ? '' : 's'} ser${total === 1 ? 'á' : 'ão'} impressa${total === 1 ? '' : 's'}.`;
+  }
+
+  function imprimirLote() {
+    const labels = [];
+    MEAL_CATEGORIES.forEach(cat => {
+      if (!loteMealsSelecionadas[cat.field]) return;
+      dataPacientes.forEach(p => {
+        if (p[cat.field]) labels.push(buildLabelInner(p, cat));
+      });
+    });
+    if (!labels.length) {
+      showToast("Marque ao menos uma refeição com pacientes", "error");
+      return;
+    }
+    closeModal("modal-lote");
+    imprimirEtiquetas(labels);
+  }
+
+  // === Novo dia (escolher uma data futura, ex: preparar o de amanhã) ===
+  function onNovoDiaEscolhido() {
+    const iso = document.getElementById("novo-dia-input").value; // yyyy-mm-dd
+    if (!iso) return;
+    const partes = iso.split('-');
+    const dataBR = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+    const sel = document.getElementById("date-select");
+    if (![...sel.options].some(o => o.value === dataBR)) {
+      const opt = document.createElement("option");
+      opt.value = dataBR;
+      opt.innerText = dataBR;
+      sel.appendChild(opt);
+      ordenarOpcoesData(sel);
+    }
+    sel.value = dataBR;
+    onDateChange();
+  }
+
+  // Reordena as opções do seletor de datas (mais recente primeiro).
+  function ordenarOpcoesData(sel) {
+    const opts = [...sel.options];
+    opts.sort((a, b) => {
+      const da = parseDataBR(a.value), db = parseDataBR(b.value);
+      if (da && db) return db - da;
+      if (da) return -1;
+      if (db) return 1;
+      return a.value.localeCompare(b.value);
+    });
+    const atual = sel.value;
+    sel.innerHTML = "";
+    opts.forEach(o => sel.appendChild(o));
+    sel.value = atual;
+  }
+
+  // === Chips de seleção múltipla + texto livre (cada texto digitado também vira um chip) ===
+  function parseMealValue(value) {
+    if (!value) return { chips: [] };
+    const chips = value.split('+').map(s => s.trim()).filter(Boolean);
+    return { chips };
+  }
+
+  function combineMealValue(field) {
+    return mealFormState[field].chips.join(' + ');
+  }
+
+  function toggleChip(field, item) {
+    const state = mealFormState[field];
+    const i = state.chips.indexOf(item);
+    if (i > -1) state.chips.splice(i, 1); else state.chips.push(item);
+    renderMealFields();
+  }
+
+  // Confirma o texto digitado no campo livre, transformando-o em um chip
+  // removível (igual aos itens do catálogo), e limpa o campo de digitação.
+  function confirmarTextoExtra(field) {
+    const state = mealFormState[field];
+    const texto = (state.textoDraft || '').trim();
+    if (!texto) return;
+    state.textoDraft = '';
+    if (state.chips.indexOf(texto) === -1) state.chips.push(texto);
+    renderMealFields();
+    const input = document.getElementById('f-' + field + '-texto');
+    if (input) input.focus();
+  }
+
+  function toggleMealGroup(field) {
+    const state = mealFormState[field];
+    state.collapsed = !state.collapsed;
+    renderMealFields();
+  }
+
+  const CHEVRON_SVG = '<svg class="mg-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+  function renderMealFields() {
+    const container = document.getElementById('meal-fields');
+    container.innerHTML = '';
+
+    MEAL_CATEGORIES.forEach(cat => {
+      const state = mealFormState[cat.field] || { chips: [], textoDraft: '' };
+      // Sempre começa fechado, mesmo com itens já selecionados (ex: ao editar um
+      // paciente com as 6 refeições preenchidas). Abrir tudo de uma vez mostra 6
+      // caixas de busca + 6 paredes de chips simultaneamente — poluição visual
+      // que o acordeão existe justamente para evitar.
+      if (state.collapsed === undefined) state.collapsed = true;
+      if (state.search === undefined) state.search = '';
+
+      const group = document.createElement('div');
+      group.className = 'meal-group' + (state.collapsed ? '' : ' open');
+
+      const header = document.createElement('div');
+      header.className = 'meal-group-header';
+      header.onclick = () => toggleMealGroup(cat.field);
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'mg-label';
+      labelSpan.textContent = cat.label;
+      header.appendChild(labelSpan);
+
+      const selectedCount = state.chips.length;
+      if (selectedCount > 0) {
+        const countSpan = document.createElement('span');
+        countSpan.className = 'mg-count';
+        countSpan.textContent = selectedCount;
+        header.appendChild(countSpan);
+      }
+
+      header.insertAdjacentHTML('beforeend', CHEVRON_SVG);
+      group.appendChild(header);
+
+      if (selectedCount > 0 && state.collapsed) {
+        const summary = document.createElement('div');
+        summary.className = 'meal-group-summary';
+        summary.textContent = combineMealValue(cat.field);
+        group.appendChild(summary);
+      }
+
+      if (!state.collapsed) {
+        const body = document.createElement('div');
+        body.className = 'meal-group-body';
+
+        const itens = catalogoItens;
+        // Chips digitados manualmente (não fazem parte do catálogo padrão) ficam
+        // sempre visíveis no topo, com um "x" para remover — mesmo comportamento
+        // dos itens do catálogo, só que destacados por não terem vindo de lá.
+        const customSelecionados = state.chips.filter(c => !itens.includes(c));
+
+        if (itens.length === 0 && customSelecionados.length === 0) {
+          const vazio = document.createElement('span');
+          vazio.className = 'chip-empty';
+          vazio.textContent = 'Nenhum item cadastrado ainda. Cadastre pelo ícone de cadeado no topo da página, ou digite algo abaixo.';
+          body.appendChild(vazio);
+        } else {
+          if (itens.length > 8) {
+            const search = document.createElement('input');
+            search.type = 'text';
+            search.id = 'f-' + cat.field + '-search';
+            search.className = 'chip-search';
+            search.placeholder = 'Buscar item...';
+            search.value = state.search;
+            search.oninput = (e) => {
+              const pos = e.target.selectionStart;
+              mealFormState[cat.field].search = e.target.value;
+              renderMealFields();
+              const el = document.getElementById('f-' + cat.field + '-search');
+              if (el) { el.focus(); el.setSelectionRange(pos, pos); }
+            };
+            body.appendChild(search);
+          }
+
+          const chipsDiv = document.createElement('div');
+          chipsDiv.className = 'chips';
+          const filtro = state.search.trim().toLowerCase();
+          const itensFiltrados = filtro ? itens.filter(item => item.toLowerCase().includes(filtro)) : itens;
+
+          customSelecionados.forEach(item => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chip on chip-custom';
+            btn.title = 'Clique para remover';
+            btn.textContent = item + ' ×';
+            btn.onclick = () => toggleChip(cat.field, item);
+            chipsDiv.appendChild(btn);
+          });
+
+          if (itensFiltrados.length === 0 && customSelecionados.length === 0) {
+            const nores = document.createElement('span');
+            nores.className = 'chip-noresult';
+            nores.textContent = 'Nenhum item encontrado.';
+            chipsDiv.appendChild(nores);
+          } else {
+            itensFiltrados.forEach(item => {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'chip' + (state.chips.includes(item) ? ' on' : '');
+              btn.textContent = item;
+              btn.onclick = () => toggleChip(cat.field, item);
+              chipsDiv.appendChild(btn);
+            });
+          }
+          body.appendChild(chipsDiv);
+        }
+
+        const textoRow = document.createElement('div');
+        textoRow.className = 'chip-texto-row';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'f-' + cat.field + '-texto';
+        input.className = 'chip-search chip-texto-extra';
+        input.placeholder = 'Digite algo e aperte Enter para adicionar';
+        input.value = state.textoDraft || '';
+        input.oninput = (e) => { mealFormState[cat.field].textoDraft = e.target.value; };
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); confirmarTextoExtra(cat.field); }
+        };
+        input.onblur = () => confirmarTextoExtra(cat.field);
+        textoRow.appendChild(input);
+
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'chip-texto-add';
+        addBtn.title = 'Adicionar';
+        addBtn.textContent = '+';
+        // onmousedown (em vez de onclick) dispara antes do blur do input,
+        // então o texto é confirmado mesmo com o clique tirando o foco.
+        addBtn.onmousedown = (e) => { e.preventDefault(); confirmarTextoExtra(cat.field); };
+        textoRow.appendChild(addBtn);
+
+        body.appendChild(textoRow);
+
+        group.appendChild(body);
+      }
+
+      container.appendChild(group);
+    });
   }
 
   // === Modal Form (Adicionar/Editar) ===
@@ -390,51 +1026,89 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     form.reset();
     document.getElementById("f-id").value = "";
 
+    mealFormState = {};
+    MEAL_CATEGORIES.forEach(cat => { mealFormState[cat.field] = { chips: [], textoDraft: '' }; });
+
+    const btnAlta = document.getElementById("btn-alta");
     if (index !== null) {
       document.getElementById("form-title").innerText = "Editar Paciente";
       const p = dataPacientes[index];
-      document.getElementById("f-id").value = p.id;
+      document.getElementById("f-id").value = p.rowNumber;
       document.getElementById("f-nome").value = p.prontuario_nome;
       document.getElementById("f-diag").value = p.diagnostico;
       document.getElementById("f-dieta").value = p.dieta;
-      document.getElementById("f-desjejum").value = p.desjejum;
-      document.getElementById("f-colacao").value = p.colacao;
-      document.getElementById("f-almoco").value = p.almoco;
-      document.getElementById("f-lanche").value = p.lanche;
-      document.getElementById("f-jantar").value = p.jantar;
-      document.getElementById("f-ceia").value = p.ceia;
       document.getElementById("f-obs").value = p.observacao;
+
+      MEAL_CATEGORIES.forEach(cat => {
+        mealFormState[cat.field] = parseMealValue(p[cat.field]);
+      });
+      // Botão de alta só faz sentido ao editar um paciente já salvo (tem rowNumber).
+      btnAlta.style.display = p.rowNumber ? "" : "none";
+      altaAtual = { rowNumber: p.rowNumber, nome: p.prontuario_nome };
     } else {
       document.getElementById("form-title").innerText = "Adicionar Paciente";
+      btnAlta.style.display = "none";
+      altaAtual = null;
     }
 
+    renderMealFields();
     document.getElementById("modal-form").classList.add("open");
+  }
+
+  // Dar alta = remover o paciente do dia atual (deixa de ser herdado nos próximos).
+  let altaAtual = null; // { rowNumber, nome }
+
+  function darAltaPaciente() {
+    if (!altaAtual || !altaAtual.rowNumber) return;
+    const nome = altaAtual.nome || 'este paciente';
+    if (!confirm(`Dar alta e remover ${nome} do dia ${currentDate}?\n\nEle deixará de aparecer nos próximos dias.`)) return;
+
+    const btn = document.getElementById("btn-alta");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Removendo...</span>';
+
+    const aoRemover = (res) => {
+      btn.disabled = false;
+      btn.innerHTML = 'Dar alta';
+      if (res && res.success) {
+        showToast("Paciente recebeu alta");
+        closeModal("modal-form");
+        onDateChange();
+      } else {
+        showToast("Erro ao dar alta: " + ((res && res.error) || ''), "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoRemover).withFailureHandler(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'Dar alta';
+        showToast("Erro ao dar alta", "error");
+      }).removerPaciente(currentDate, altaAtual.rowNumber, currentPerfil);
+    } else {
+      setTimeout(() => aoRemover({ success: true }), 400);
+    }
   }
 
   function salvarPacienteForm(e) {
     e.preventDefault();
     const btn = document.getElementById("btn-salvar");
     btn.disabled = true;
-    btn.innerText = "Salvando...";
+    btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Salvando...</span>';
 
     const paciente = {
-      id: document.getElementById("f-id").value,
+      rowNumber: document.getElementById("f-id").value || null,
       prontuario_nome: document.getElementById("f-nome").value,
       diagnostico: document.getElementById("f-diag").value,
       dieta: document.getElementById("f-dieta").value,
-      desjejum: document.getElementById("f-desjejum").value,
-      colacao: document.getElementById("f-colacao").value,
-      almoco: document.getElementById("f-almoco").value,
-      lanche: document.getElementById("f-lanche").value,
-      jantar: document.getElementById("f-jantar").value,
-      ceia: document.getElementById("f-ceia").value,
       observacao: document.getElementById("f-obs").value
     };
+    MEAL_CATEGORIES.forEach(cat => { paciente[cat.field] = combineMealValue(cat.field); });
 
     if (typeof google !== 'undefined') {
       google.script.run.withSuccessHandler((res) => {
         btn.disabled = false;
-        btn.innerText = "Salvar Paciente";
+        btn.innerHTML = 'Salvar Paciente';
         if (res.success) {
           showToast("Paciente salvo com sucesso!");
           closeModal("modal-form");
@@ -442,14 +1116,158 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         } else {
           showToast("Erro ao salvar: " + res.error, "error");
         }
-      }).salvarPaciente(currentDate, paciente);
+      }).withFailureHandler((err) => {
+        btn.disabled = false;
+        btn.innerHTML = 'Salvar Paciente';
+        showToast("Erro ao salvar", "error");
+        console.error(err);
+      }).salvarPaciente(currentDate, paciente, currentPerfil);
     } else {
       setTimeout(() => {
         btn.disabled = false;
-        btn.innerText = "Salvar Paciente";
+        btn.innerHTML = 'Salvar Paciente';
         showToast("Salvo localmente (modo Dev)!");
         closeModal("modal-form");
       }, 800);
+    }
+  }
+
+  // === Administração (catálogo de itens de dieta) ===
+  function abrirLoginAdmin() {
+    document.getElementById("admin-login-form").reset();
+    document.getElementById("modal-admin-login").classList.add("open");
+  }
+
+  function confirmarSenhaAdmin(e) {
+    e.preventDefault();
+    const senha = document.getElementById("f-admin-senha").value;
+    const btn = document.getElementById("btn-admin-entrar");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Verificando...</span>';
+
+    const aoConfirmar = (res) => {
+      btn.disabled = false;
+      btn.innerHTML = 'Entrar';
+      if (res.success) {
+        closeModal("modal-admin-login");
+        abrirPainelAdmin();
+      } else {
+        showToast("Senha incorreta", "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoConfirmar).withFailureHandler(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'Entrar';
+        showToast("Erro ao verificar senha", "error");
+      }).verificarSenhaAdmin(senha);
+    } else {
+      setTimeout(() => aoConfirmar({ success: senha === 'admin123' }), 400);
+    }
+  }
+
+  function abrirPainelAdmin() {
+    document.getElementById("modal-admin").classList.add("open");
+    renderAdminBody();
+  }
+
+  function renderAdminBody() {
+    const body = document.getElementById("admin-body");
+    body.innerHTML = '';
+
+    const addDiv = document.createElement('div');
+    addDiv.className = 'admin-add';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Novo item de dieta...';
+    input.id = 'admin-input-item';
+    input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); adicionarItemAdmin(); } };
+    addDiv.appendChild(input);
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'btn primary';
+    addBtn.textContent = '+ Adicionar';
+    addBtn.onclick = () => adicionarItemAdmin();
+    addDiv.appendChild(addBtn);
+
+    body.appendChild(addDiv);
+
+    if (catalogoItens.length === 0) {
+      const vazio = document.createElement('div');
+      vazio.className = 'admin-empty';
+      vazio.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v2h6V3"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="13" y2="18"/></svg><p>Nenhum item cadastrado ainda</p>';
+      body.appendChild(vazio);
+      return;
+    }
+
+    const count = document.createElement('div');
+    count.className = 'admin-count';
+    count.textContent = catalogoItens.length + (catalogoItens.length === 1 ? ' item cadastrado' : ' itens cadastrados');
+    body.appendChild(count);
+
+    const tagsDiv = document.createElement('div');
+    tagsDiv.className = 'admin-tags';
+    catalogoItens.forEach(item => {
+      const tag = document.createElement('span');
+      tag.className = 'admin-tag';
+      const txt = document.createElement('span');
+      txt.textContent = item;
+      tag.appendChild(txt);
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.textContent = '×';
+      rm.title = 'Remover';
+      rm.onclick = () => removerItemAdmin(item);
+      tag.appendChild(rm);
+      tagsDiv.appendChild(tag);
+    });
+    body.appendChild(tagsDiv);
+  }
+
+  function adicionarItemAdmin() {
+    const input = document.getElementById('admin-input-item');
+    const item = input.value.trim();
+    if (!item) return;
+
+    const aoSalvar = (res) => {
+      if (res.success) {
+        catalogoItens.push(item);
+        renderAdminBody();
+        showToast("Item adicionado");
+      } else {
+        showToast("Erro ao adicionar: " + res.error, "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoSalvar).withFailureHandler(() => {
+        showToast("Erro ao adicionar item", "error");
+      }).adicionarItemDieta(item);
+    } else {
+      setTimeout(() => aoSalvar({ success: true }), 300);
+    }
+  }
+
+  function removerItemAdmin(item) {
+    const aoRemover = (res) => {
+      if (res.success) {
+        catalogoItens = catalogoItens.filter(i => i !== item);
+        renderAdminBody();
+        showToast("Item removido");
+      } else {
+        showToast("Erro ao remover: " + res.error, "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoRemover).withFailureHandler(() => {
+        showToast("Erro ao remover item", "error");
+      }).removerItemDieta(item);
+    } else {
+      setTimeout(() => aoRemover({ success: true }), 300);
     }
   }
 
