@@ -8,8 +8,6 @@ const ADMIN_PASSWORD = 'admin123';
 // já existentes do perfil Casa da Gestante (que continuam usando o nome puro da data).
 const PREFIXO_ONCOLOGICO = 'ONCO - ';
 
-const CATEGORIAS_DIETA = ['Desjejum', 'Colacao', 'Almoco', 'Lanche', 'Jantar', 'Ceia'];
-
 function doGet(e) {
   return HtmlService.createHtmlOutputFromFile('index')
       .setTitle('Casa da Gestante - Controle de Dietas')
@@ -158,71 +156,58 @@ function verificarSenhaAdmin(senha) {
   return { success: senha === ADMIN_PASSWORD };
 }
 
-// Garante que a aba do catálogo de itens de dieta existe
+// Garante que a aba do catálogo de itens de dieta existe.
+// O catálogo é uma única lista de itens, compartilhada entre todas as
+// refeições (Desjejum, Colação, Almoço, Lanche, Jantar, Ceia) e entre os
+// dois perfis — não há divisão por horário ou categoria.
 function getItensSheet_(ss) {
   let sheet = ss.getSheetByName('ITENS_DIETA');
   if (!sheet) {
     sheet = ss.insertSheet('ITENS_DIETA');
-    sheet.appendRow(['Categoria', 'Item']);
+    sheet.appendRow(['Item']);
   }
   return sheet;
 }
 
-// Retorna o catálogo de itens de dieta agrupado por categoria
+// Retorna o catálogo de itens de dieta (lista única, sem categorias)
 function getItensDieta() {
   try {
     const ss = getSpreadsheet_();
     const sheet = getItensSheet_(ss);
     const data = sheet.getDataRange().getValues();
 
-    const catalogo = {};
-    CATEGORIAS_DIETA.forEach(c => catalogo[c] = []);
-
+    const itens = [];
     for (let i = 1; i < data.length; i++) {
-      const categoria = data[i][0];
-      const item = data[i][1];
-      if (categoria && item && catalogo[categoria]) {
-        catalogo[categoria].push(item);
-      }
+      if (data[i][0]) itens.push(data[i][0]);
     }
-    return catalogo;
+    return itens;
   } catch(e) {
     // Fallback mock em caso de erro inesperado
-    return {
-      Desjejum: ['CAFÉ COMPLETO', 'MINGAU DE AVEIA', 'CAFÉ COMPLETO DM'],
-      Colacao: ['SUCO', 'SUCO DM', 'VITAMINA'],
-      Almoco: ['GERAL', 'GERAL HAS DM', 'BRANDA'],
-      Lanche: ['VITAMINA', 'VITAMINA DM', 'BISCOITO'],
-      Jantar: ['BRANDA DE FRANGO', 'BRANDA DM HAS', 'SOPA'],
-      Ceia: ['MINGAU', 'MINGAU DM + 1 FRUTA']
-    };
+    return ['CAFÉ COMPLETO', 'CAFÉ COMPLETO DM', 'MINGAU DE AVEIA', 'SUCO', 'SUCO DM', 'VITAMINA', 'VITAMINA DM', 'GERAL', 'GERAL HAS DM', 'BRANDA', 'BISCOITO', 'MINGAU'];
   }
 }
 
-// Adiciona um novo item ao catálogo de uma categoria
-function adicionarItemDieta(categoria, item) {
+// Adiciona um novo item ao catálogo
+function adicionarItemDieta(item) {
   try {
-    if (CATEGORIAS_DIETA.indexOf(categoria) === -1) {
-      return { success: false, error: 'Categoria inválida' };
-    }
     const ss = getSpreadsheet_();
     const sheet = getItensSheet_(ss);
-    sheet.appendRow([categoria, item]);
+    sheet.appendRow([item]);
     return { success: true };
   } catch(e) {
     return { success: false, error: e.toString() };
   }
 }
 
-// Remove um item do catálogo de uma categoria
-function removerItemDieta(categoria, item) {
+// Remove um item do catálogo
+function removerItemDieta(item) {
   try {
     const ss = getSpreadsheet_();
     const sheet = getItensSheet_(ss);
     const data = sheet.getDataRange().getValues();
 
     for (let i = data.length - 1; i >= 1; i--) {
-      if (data[i][0] === categoria && data[i][1] === item) {
+      if (data[i][0] === item) {
         sheet.deleteRow(i + 1);
         break;
       }
