@@ -15,23 +15,9 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// Planilha de dados: criada automaticamente no primeiro uso e o ID fica salvo
-// nas Propriedades do Script. Não é necessário configurar nenhum ID manualmente.
+// Retorna a planilha onde o script está sendo executado
 function getSpreadsheet_() {
-  const props = PropertiesService.getScriptProperties();
-  const id = props.getProperty('SPREADSHEET_ID');
-
-  if (id) {
-    try {
-      return SpreadsheetApp.openById(id);
-    } catch (e) {
-      // ID salvo não é mais válido (planilha excluída/movida) - recria abaixo
-    }
-  }
-
-  const ss = SpreadsheetApp.create('Casa da Gestante - Dados');
-  props.setProperty('SPREADSHEET_ID', ss.getId());
-  return ss;
+  return SpreadsheetApp.getActiveSpreadsheet();
 }
 
 // Resolve o nome real da aba na planilha para o perfil e data informados
