@@ -1,6 +1,16 @@
-// Google Apps Script - Casa da Gestante
+// Google Apps Script - Casa da Gestante / Oncológico
 // SPREADSHEET_ID: Insira o ID real da sua planilha aqui.
 const SPREADSHEET_ID = 'SUBSTITUA_PELO_ID_DA_PLANILHA';
+
+// Senha da área de administração (cadastro de itens de dieta).
+// ALTERE esta senha antes de usar em produção.
+const ADMIN_PASSWORD = 'admin123';
+
+// Prefixo usado nas abas do perfil Oncológico, para não colidir com as abas
+// já existentes do perfil Casa da Gestante (que continuam usando o nome puro da data).
+const PREFIXO_ONCOLOGICO = 'ONCO - ';
+
+const CATEGORIAS_DIETA = ['Desjejum', 'Colacao', 'Almoco', 'Lanche', 'Jantar', 'Ceia'];
 
 function doGet(e) {
   return HtmlService.createHtmlOutputFromFile('index')
@@ -9,23 +19,36 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// Retorna as abas (Dias) disponíveis na planilha
-function getDatasDisponiveis() {
+// Resolve o nome real da aba na planilha para o perfil e data informados
+function resolveSheetName_(perfil, dataStr) {
+  return perfil === 'ONCOLOGICO' ? (PREFIXO_ONCOLOGICO + dataStr) : dataStr;
+}
+
+// Retorna as abas (Dias) disponíveis na planilha para o perfil informado
+function getDatasDisponiveis(perfil) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheets = ss.getSheets();
-    return sheets.map(s => s.getName());
-  } catch(e) { 
+    const nomes = sheets.map(s => s.getName());
+
+    if (perfil === 'ONCOLOGICO') {
+      return nomes
+        .filter(n => n.indexOf(PREFIXO_ONCOLOGICO) === 0)
+        .map(n => n.substring(PREFIXO_ONCOLOGICO.length));
+    }
+    // Gestante: abas que NÃO usam o prefixo Oncológico (mantém compatibilidade com abas antigas)
+    return nomes.filter(n => n.indexOf(PREFIXO_ONCOLOGICO) !== 0 && n !== 'ITENS_DIETA');
+  } catch(e) {
     // Fallback Mock para testes sem ID da planilha
-    return ['17/07/2026', '18/07/2026']; 
+    return ['17/07/2026', '18/07/2026'];
   }
 }
 
-// Retorna os pacientes da aba especificada
-function getPacientesPorData(dataStr) {
+// Retorna os pacientes da aba especificada, para o perfil informado
+function getPacientesPorData(dataStr, perfil) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(dataStr);
+    const sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
     if (!sheet) return [];
 
     const data = sheet.getDataRange().getValues();
@@ -53,6 +76,11 @@ function getPacientesPorData(dataStr) {
     return pacientes;
   } catch(e) {
     // Retorna mock
+    if (perfil === 'ONCOLOGICO') {
+      return [
+        { rowNumber: 2, prontuario_nome: "40521 - Carlos Eduardo Menezes", diagnostico: "Oncológico", dieta: "Branda Hipercalórica", desjejum: "MINGAU DE AVEIA + FRUTA", colacao: "SUCO ADOÇADO", almoco: "BRANDA COM FRANGO DESFIADO", lanche: "VITAMINA HIPERCALÓRICA", jantar: "SOPA CREMOSA", ceia: "MINGAU + COMPLEMENTO", observacao: "" }
+      ];
+    }
     return [
       { rowNumber: 2, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
       { rowNumber: 3, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
@@ -60,15 +88,16 @@ function getPacientesPorData(dataStr) {
   }
 }
 
-// Salva ou edita um paciente na aba da data especificada
-function salvarPaciente(dataStr, paciente) {
+// Salva ou edita um paciente na aba da data especificada, para o perfil informado
+function salvarPaciente(dataStr, paciente, perfil) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let sheet = ss.getSheetByName(dataStr);
+    const sheetName = resolveSheetName_(perfil, dataStr);
+    let sheet = ss.getSheetByName(sheetName);
 
     // Se a aba para esse dia não existir, cria uma nova com cabeçalho
     if (!sheet) {
-      sheet = ss.insertSheet(dataStr);
+      sheet = ss.insertSheet(sheetName);
       sheet.appendRow([
         "Prontuário / Paciente", "Diagnóstico", "Dieta",
         "Desjejum - 6h", "Colação - 9h", "Almoço - 12h",
@@ -100,6 +129,88 @@ function salvarPaciente(dataStr, paciente) {
       sheet.appendRow(rowData);
       return { success: true, rowNumber: newRowNumber };
     }
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// === Administração ===
+
+// Verifica a senha de acesso à área de administração
+function verificarSenhaAdmin(senha) {
+  return { success: senha === ADMIN_PASSWORD };
+}
+
+// Garante que a aba do catálogo de itens de dieta existe
+function getItensSheet_(ss) {
+  let sheet = ss.getSheetByName('ITENS_DIETA');
+  if (!sheet) {
+    sheet = ss.insertSheet('ITENS_DIETA');
+    sheet.appendRow(['Categoria', 'Item']);
+  }
+  return sheet;
+}
+
+// Retorna o catálogo de itens de dieta agrupado por categoria
+function getItensDieta() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = getItensSheet_(ss);
+    const data = sheet.getDataRange().getValues();
+
+    const catalogo = {};
+    CATEGORIAS_DIETA.forEach(c => catalogo[c] = []);
+
+    for (let i = 1; i < data.length; i++) {
+      const categoria = data[i][0];
+      const item = data[i][1];
+      if (categoria && item && catalogo[categoria]) {
+        catalogo[categoria].push(item);
+      }
+    }
+    return catalogo;
+  } catch(e) {
+    // Fallback Mock para testes sem ID da planilha
+    return {
+      Desjejum: ['CAFÉ COMPLETO', 'MINGAU DE AVEIA', 'CAFÉ COMPLETO DM'],
+      Colacao: ['SUCO', 'SUCO DM', 'VITAMINA'],
+      Almoco: ['GERAL', 'GERAL HAS DM', 'BRANDA'],
+      Lanche: ['VITAMINA', 'VITAMINA DM', 'BISCOITO'],
+      Jantar: ['BRANDA DE FRANGO', 'BRANDA DM HAS', 'SOPA'],
+      Ceia: ['MINGAU', 'MINGAU DM + 1 FRUTA']
+    };
+  }
+}
+
+// Adiciona um novo item ao catálogo de uma categoria
+function adicionarItemDieta(categoria, item) {
+  try {
+    if (CATEGORIAS_DIETA.indexOf(categoria) === -1) {
+      return { success: false, error: 'Categoria inválida' };
+    }
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = getItensSheet_(ss);
+    sheet.appendRow([categoria, item]);
+    return { success: true };
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// Remove um item do catálogo de uma categoria
+function removerItemDieta(categoria, item) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = getItensSheet_(ss);
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (data[i][0] === categoria && data[i][1] === item) {
+        sheet.deleteRow(i + 1);
+        break;
+      }
+    }
+    return { success: true };
   } catch(e) {
     return { success: false, error: e.toString() };
   }
