@@ -403,6 +403,72 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 </div>
 
 <script>
+  // === Sound UX System (Web Audio API) ===
+  const SoundUX = {
+    ctx: null,
+    init() {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    },
+    playOsc(type, freq, time, vol=0.1) {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + time);
+      
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      osc.start();
+      osc.stop(this.ctx.currentTime + time);
+    },
+    hover() {
+      this.playOsc('sine', 400, 0.05, 0.01);
+    },
+    click() {
+      this.playOsc('triangle', 600, 0.05, 0.05);
+      setTimeout(() => this.playOsc('sine', 800, 0.05, 0.02), 20);
+    },
+    success() {
+      this.playOsc('sine', 523.25, 0.3, 0.05); // C5
+      setTimeout(() => this.playOsc('sine', 659.25, 0.4, 0.05), 100); // E5
+      setTimeout(() => this.playOsc('sine', 783.99, 0.5, 0.05), 200); // G5
+    },
+    error() {
+      this.playOsc('sawtooth', 150, 0.2, 0.05);
+      setTimeout(() => this.playOsc('sawtooth', 120, 0.3, 0.05), 150);
+    },
+    print() {
+      this.playOsc('square', 300, 0.1, 0.02);
+      setTimeout(() => this.playOsc('square', 400, 0.1, 0.02), 50);
+      setTimeout(() => this.playOsc('square', 300, 0.1, 0.02), 100);
+    }
+  };
+
+  // Attach sound to DOM elements
+  function attachSounds() {
+    const interactables = document.querySelectorAll('.btn, .meal-btn, .edit-btn, .chip');
+    interactables.forEach(el => {
+      // Evita duplicar events (usa um hack simples de clonagem ou mark data attribute)
+      if (el.dataset.soundAttached) return;
+      el.dataset.soundAttached = "true";
+      
+      el.addEventListener('mouseenter', () => { SoundUX.init(); SoundUX.hover(); });
+      el.addEventListener('click', () => { SoundUX.init(); SoundUX.click(); });
+    });
+  }
+
+  document.body.addEventListener('click', () => { SoundUX.init(); }, { once: true });
+
+
   let dataPacientes = [];
   let currentDate = "";
   let currentPerfil = localStorage.getItem('cg_perfil') || 'GESTANTE';
@@ -460,6 +526,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
   // Toasts
   function showToast(msg, type='success') {
+    if(typeof SoundUX !== 'undefined') {
+      if(type === 'success') SoundUX.success();
+      if(type === 'error') SoundUX.error();
+    }
     const c = document.getElementById('toasts');
     const t = document.createElement('div');
     t.className = `toast ${type}`;
@@ -634,6 +704,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
       tbody.appendChild(tr);
     });
+    
+    attachSounds(); // attach to new rows
   }
 
   // Cores do perfil ativo, usadas na janela de impressão (documento separado,
@@ -700,6 +772,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       showToast("Nenhuma etiqueta para imprimir", "error");
       return;
     }
+    if (typeof SoundUX !== 'undefined') SoundUX.print();
     const cores = getCoresPerfil();
     const janela = window.open('', '_blank', 'width=480,height=420');
     if (!janela) {
