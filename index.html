@@ -91,10 +91,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .paciente-diag { font-size: 12px; color: var(--mut); }
 .dieta-badge { display: inline-block; background: var(--pri-s); color: var(--pri-d); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
 
-.meal-btn { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: block; width: 100%; text-align: left; margin-bottom: 4px; position: relative; overflow: hidden; }
-.meal-btn::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(14, 122, 95, 0.15); transform: translate(-50%, -50%); transition: width .4s, height .4s; }
-.meal-btn:active::after { width: 200px; height: 200px; }
-.meal-btn:hover { border-color: var(--pri); color: var(--pri-d); background: var(--pri-s); transform: translateX(2px); }
+.meal-btn { background: #fff; border: 1px solid var(--line); color: #334155; padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; margin-bottom: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+.meal-btn:hover { border-color: var(--pri); color: var(--pri-d); background: #f8f9fa; box-shadow: 0 3px 6px rgba(0,0,0,0.06); }
+.meal-btn:active { transform: scale(0.97); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+.meal-btn svg { width: 13px; height: 13px; opacity: 0.4; transition: opacity .2s, color .2s; flex-shrink: 0; }
+.meal-btn:hover svg { opacity: 1; color: var(--pri); }
 .meal-btn:last-child { margin-bottom: 0; }
 
 /* Modal */
@@ -812,7 +813,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         td.className = "td-refeicao";
         const val = p[cat.field];
         td.innerHTML = val
-          ? `<button class="meal-btn" onclick="openPrintModal(${index}, '${cat.field}')">${escapeHtml(val)}</button>`
+          ? `<button class="meal-btn" onclick="openPrintModal(${index}, '${cat.field}')">
+               <span>${escapeHtml(val)}</span>
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+             </button>`
           : '-';
         tr.appendChild(td);
       });
