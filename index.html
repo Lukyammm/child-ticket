@@ -190,6 +190,78 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   .label-preview, .label-preview * { visibility: visible; }
   .label-preview { position: absolute; left: 0; top: 0; border: none; box-shadow: none; margin: 0; background: #fff; }
 }
+
+/* Responsividade Mobile-First (Inteligente) */
+@media (max-width: 768px) {
+  .topbar .in { padding: 12px; }
+  .top-actions { width: 100%; flex-wrap: wrap; justify-content: space-between; }
+  .top-actions > button, .top-actions > span { flex: 1; min-width: 45%; }
+  
+  .grid2 { grid-template-columns: 1fr; gap: 15px; }
+
+  /* Tabela para Cartões (Cards) */
+  .tbl-wrap { border: none; background: transparent; padding: 0 10px 20px; }
+  .card { background: transparent; box-shadow: none; border: none; }
+  .card-header { border-radius: var(--r); margin-bottom: 15px; box-shadow: var(--sh); }
+  
+  table.tbl { border: none; }
+  .tbl thead { display: none; }
+  .tbl tbody { display: flex; flex-direction: column; gap: 16px; }
+  
+  .tbl tr { 
+    display: flex; 
+    flex-wrap: wrap; 
+    background: var(--card); 
+    border: 1px solid var(--line); 
+    border-radius: var(--r); 
+    box-shadow: var(--sh);
+    padding: 12px;
+    align-items: flex-start;
+  }
+  .tbl tr:hover { background: var(--card); }
+  
+  .tbl td { 
+    display: block; 
+    width: 100%; 
+    padding: 6px 0;
+    border-bottom: none;
+  }
+  
+  /* Informações Principais (Topo do Card) */
+  .tbl td.td-info { padding-bottom: 2px; }
+  .tbl td.td-dieta { padding-top: 0; padding-bottom: 12px; border-bottom: 1px dashed var(--line); margin-bottom: 8px; }
+  
+  /* Refeições em Grid no Mobile */
+  .tbl td.td-refeicao { 
+    width: 50%; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px;
+    padding: 4px 6px;
+  }
+  .tbl td.td-refeicao::before { 
+    content: attr(data-label); 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: var(--mut); 
+    text-transform: uppercase; 
+  }
+  
+  .tbl td.td-obs { 
+    width: 100%; 
+    border-top: 1px dashed var(--line);
+    margin-top: 8px;
+    padding-top: 12px;
+  }
+  .tbl td.td-obs::before {
+    content: attr(data-label) ": "; 
+    font-weight: 600;
+  }
+
+  /* Modais ocupando a tela quase toda */
+  .modal { max-width: 95%; margin: 10px auto; border-radius: 12px; }
+  .modal-body { max-height: 75vh; }
+}
 </style>
 </head>
 <body>
@@ -677,6 +749,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       const tr = document.createElement("tr");
 
       const tdInfo = document.createElement("td");
+      tdInfo.setAttribute("data-label", "Paciente");
+      tdInfo.className = "td-info";
       tdInfo.innerHTML = `
         <div class="paciente-nome">${escapeHtml(p.prontuario_nome)}</div>
         <div class="paciente-diag">${escapeHtml(p.diagnostico)}</div>
@@ -684,6 +758,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       `;
 
       const tdDieta = document.createElement("td");
+      tdDieta.setAttribute("data-label", "Dieta");
+      tdDieta.className = "td-dieta";
       tdDieta.innerHTML = `<span class="dieta-badge">${escapeHtml(p.dieta)}</span>`;
 
       tr.appendChild(tdInfo);
@@ -691,6 +767,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
       MEAL_CATEGORIES.forEach(cat => {
         const td = document.createElement("td");
+        td.setAttribute("data-label", cat.label);
+        td.className = "td-refeicao";
         const val = p[cat.field];
         td.innerHTML = val
           ? `<button class="meal-btn" onclick="openPrintModal(${index}, '${cat.field}')">${escapeHtml(val)}</button>`
@@ -699,6 +777,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       });
 
       const tdObs = document.createElement("td");
+      tdObs.setAttribute("data-label", "Observação");
+      tdObs.className = "td-obs";
       tdObs.textContent = p.observacao ? p.observacao : '-';
       tr.appendChild(tdObs);
 
