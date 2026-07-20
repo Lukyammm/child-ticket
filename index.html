@@ -111,12 +111,26 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 
-/* Chips (seleção múltipla de itens de dieta) */
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+/* Chips (seleção múltipla de itens de dieta) — agrupados em acordeão por refeição */
+.meal-group { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: #fff; }
+.meal-group-header { display: flex; align-items: center; gap: 8px; padding: 11px 14px; cursor: pointer; user-select: none; background: var(--paper); transition: background-color .15s; }
+.meal-group-header:hover { background: var(--pri-s); }
+.meal-group-header .mg-label { font-weight: 600; font-size: 13.5px; flex: 1; }
+.meal-group-header .mg-count { background: var(--pri); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; min-width: 18px; text-align: center; }
+.meal-group-header .mg-chevron { color: var(--mut); transition: transform .2s ease; flex-shrink: 0; }
+.meal-group.open .mg-chevron { transform: rotate(180deg); }
+.meal-group-summary { padding: 0 14px 10px; font-size: 12px; color: var(--mut); line-height: 1.5; }
+.meal-group-body { padding: 12px 14px 14px; border-top: 1px solid var(--line); }
+.chip-search { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-family: inherit; font-size: 12.5px; outline: none; margin-bottom: 10px; transition: .15s; }
+.chip-search:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; max-height: 180px; overflow-y: auto; padding-right: 2px; }
+.chips::-webkit-scrollbar { width: 6px; }
+.chips::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 .chip { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 6px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: .15s cubic-bezier(0.4, 0, 0.2, 1); }
 .chip:hover { border-color: var(--pri); color: var(--pri-d); }
 .chip.on { background: var(--pri); border-color: var(--pri); color: #fff; transform: scale(1.03); }
 .chip-empty { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
+.chip-noresult { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
 
 /* Painel de Administração */
 .admin-panel-desc { font-size: 13px; color: var(--mut); margin-bottom: 18px; line-height: 1.5; }
@@ -667,49 +681,117 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     renderMealFields();
   }
 
+  function toggleMealGroup(field) {
+    const state = mealFormState[field];
+    state.collapsed = !state.collapsed;
+    renderMealFields();
+  }
+
+  const CHEVRON_SVG = '<svg class="mg-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
   function renderMealFields() {
     const container = document.getElementById('meal-fields');
     container.innerHTML = '';
 
     MEAL_CATEGORIES.forEach(cat => {
-      const wrap = document.createElement('div');
-      wrap.className = 'field';
-
-      const label = document.createElement('label');
-      label.textContent = cat.label;
-      wrap.appendChild(label);
-
-      const chipsDiv = document.createElement('div');
-      chipsDiv.className = 'chips';
-      const itens = catalogoItens;
       const state = mealFormState[cat.field] || { chips: [], texto: '' };
+      if (state.collapsed === undefined) state.collapsed = state.chips.length === 0 && !state.texto;
+      if (state.search === undefined) state.search = '';
 
-      if (itens.length === 0) {
-        const vazio = document.createElement('span');
-        vazio.className = 'chip-empty';
-        vazio.textContent = 'Nenhum item cadastrado ainda. Cadastre pelo ícone de cadeado no topo da página.';
-        chipsDiv.appendChild(vazio);
-      } else {
-        itens.forEach(item => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'chip' + (state.chips.includes(item) ? ' on' : '');
-          btn.textContent = item;
-          btn.onclick = () => toggleChip(cat.field, item);
-          chipsDiv.appendChild(btn);
-        });
+      const group = document.createElement('div');
+      group.className = 'meal-group' + (state.collapsed ? '' : ' open');
+
+      const header = document.createElement('div');
+      header.className = 'meal-group-header';
+      header.onclick = () => toggleMealGroup(cat.field);
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'mg-label';
+      labelSpan.textContent = cat.label;
+      header.appendChild(labelSpan);
+
+      const selectedCount = state.chips.length + (state.texto && state.texto.trim() ? 1 : 0);
+      if (selectedCount > 0) {
+        const countSpan = document.createElement('span');
+        countSpan.className = 'mg-count';
+        countSpan.textContent = selectedCount;
+        header.appendChild(countSpan);
       }
-      wrap.appendChild(chipsDiv);
 
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.id = 'f-' + cat.field + '-texto';
-      input.placeholder = 'Digite algo adicional (opcional)';
-      input.value = state.texto;
-      input.oninput = (e) => { mealFormState[cat.field].texto = e.target.value; };
-      wrap.appendChild(input);
+      header.insertAdjacentHTML('beforeend', CHEVRON_SVG);
+      group.appendChild(header);
 
-      container.appendChild(wrap);
+      if (selectedCount > 0 && state.collapsed) {
+        const summary = document.createElement('div');
+        summary.className = 'meal-group-summary';
+        summary.textContent = combineMealValue(cat.field);
+        group.appendChild(summary);
+      }
+
+      if (!state.collapsed) {
+        const body = document.createElement('div');
+        body.className = 'meal-group-body';
+
+        const itens = catalogoItens;
+
+        if (itens.length === 0) {
+          const vazio = document.createElement('span');
+          vazio.className = 'chip-empty';
+          vazio.textContent = 'Nenhum item cadastrado ainda. Cadastre pelo ícone de cadeado no topo da página.';
+          body.appendChild(vazio);
+        } else {
+          if (itens.length > 8) {
+            const search = document.createElement('input');
+            search.type = 'text';
+            search.id = 'f-' + cat.field + '-search';
+            search.className = 'chip-search';
+            search.placeholder = 'Buscar item...';
+            search.value = state.search;
+            search.oninput = (e) => {
+              const pos = e.target.selectionStart;
+              mealFormState[cat.field].search = e.target.value;
+              renderMealFields();
+              const el = document.getElementById('f-' + cat.field + '-search');
+              if (el) { el.focus(); el.setSelectionRange(pos, pos); }
+            };
+            body.appendChild(search);
+          }
+
+          const chipsDiv = document.createElement('div');
+          chipsDiv.className = 'chips';
+          const filtro = state.search.trim().toLowerCase();
+          const itensFiltrados = filtro ? itens.filter(item => item.toLowerCase().includes(filtro)) : itens;
+
+          if (itensFiltrados.length === 0) {
+            const nores = document.createElement('span');
+            nores.className = 'chip-noresult';
+            nores.textContent = 'Nenhum item encontrado.';
+            chipsDiv.appendChild(nores);
+          } else {
+            itensFiltrados.forEach(item => {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'chip' + (state.chips.includes(item) ? ' on' : '');
+              btn.textContent = item;
+              btn.onclick = () => toggleChip(cat.field, item);
+              chipsDiv.appendChild(btn);
+            });
+          }
+          body.appendChild(chipsDiv);
+        }
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'f-' + cat.field + '-texto';
+        input.placeholder = 'Digite algo adicional (opcional)';
+        input.value = state.texto;
+        input.oninput = (e) => { mealFormState[cat.field].texto = e.target.value; };
+        body.appendChild(input);
+
+        group.appendChild(body);
+      }
+
+      container.appendChild(group);
     });
   }
 
