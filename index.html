@@ -291,8 +291,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         <option value="">Carregando datas...</option>
       </select>
       <span style="position:relative;display:inline-block">
-        <button class="btn" title="Escolher outro dia (ex: preparar o de amanhã)" tabindex="-1">+ Novo dia</button>
-        <input type="date" id="novo-dia-input" title="Escolher outro dia (ex: preparar o de amanhã)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="onNovoDiaEscolhido()">
+        <button class="btn" title="Escolher outro dia (ex: preparar o de amanhã)" onclick="try{document.getElementById('novo-dia-input').showPicker()}catch(e){}">+ Novo dia</button>
+        <input type="date" id="novo-dia-input" title="Escolher outro dia (ex: preparar o de amanhã)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;pointer-events:none;" onchange="onNovoDiaEscolhido()">
       </span>
       <button class="btn primary" onclick="openFormModal()">+ Adicionar Paciente</button>
       <button class="btn" title="Imprimir várias etiquetas de uma vez" onclick="abrirImpressaoLote()">
