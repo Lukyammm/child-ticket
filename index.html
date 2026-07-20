@@ -23,8 +23,18 @@
   --body: 'Inter', system-ui, sans-serif;
 }
 
+body.theme-onco {
+  --ink: #2a1d24;
+  --paper: #f9f4f6;
+  --line: #ecdfe4;
+  --mut: #7a6670;
+  --pri: #c2255c;
+  --pri-d: #99194a;
+  --pri-s: #fbe6ee;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--body); background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+body { font-family: var(--body); background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh; transition: background-color .3s, color .3s; }
 
 /* Topbar */
 .topbar { position: sticky; top: 0; z-index: 40; background: rgba(244, 246, 243, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
@@ -37,6 +47,15 @@ body { font-family: var(--body); background: var(--paper); color: var(--ink); fo
 .top-actions { display: flex; align-items: center; gap: 12px; }
 .date-selector { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; outline: none; }
 .date-selector:focus { border-color: var(--pri); }
+
+/* Seletor de Perfil */
+.profile-switch { display: flex; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+.profile-btn { border: none; background: transparent; padding: 9px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 700; color: var(--mut); cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.profile-btn:hover { color: var(--ink); }
+.profile-btn.active { background: var(--pri); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+
+.lockbtn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--mut); cursor: pointer; display: grid; place-items: center; transition: .2s; }
+.lockbtn:hover { color: var(--pri); border-color: var(--pri); background: var(--pri-s); }
 
 .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: #fff; cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
 .btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(0,0,0,0.1); transform: translate(-50%, -50%); transition: width .4s, height .4s; }
@@ -88,6 +107,24 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 
+/* Chips (seleção múltipla de itens de dieta) */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 6px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: .15s cubic-bezier(0.4, 0, 0.2, 1); }
+.chip:hover { border-color: var(--pri); color: var(--pri-d); }
+.chip.on { background: var(--pri); border-color: var(--pri); color: #fff; transform: scale(1.03); }
+.chip-empty { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
+
+/* Painel de Administração */
+.admin-cat { margin-bottom: 20px; }
+.admin-cat h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); margin-bottom: 8px; }
+.admin-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.admin-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--pri-s); color: var(--pri-d); padding: 5px 8px 5px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; }
+.admin-tag button { border: none; background: rgba(0,0,0,.08); color: inherit; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-size: 11px; line-height: 1; }
+.admin-tag button:hover { background: rgba(0,0,0,.18); }
+.admin-add { display: flex; gap: 8px; }
+.admin-add input { flex: 1; }
+.admin-add button { white-space: nowrap; }
+
 /* Label Preview (Screen) */
 .label-preview-wrapper { background: var(--paper); padding: 20px; display: flex; justify-content: center; }
 .label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 3.5mm 4mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-start; font-family: Arial, sans-serif; color: #000; }
@@ -127,16 +164,25 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 <header class="topbar">
   <div class="in">
     <a class="brand" href="#">
-      <span class="dot">
+      <span class="dot" id="brand-dot">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </span>
-      <span><b>Casa da Gestante</b><small>Controle de Dietas</small></span>
+      <span><b id="brand-title">Casa da Gestante</b><small>Controle de Dietas</small></span>
     </a>
+
+    <div class="profile-switch" role="tablist" aria-label="Seletor de Perfil">
+      <button type="button" class="profile-btn active" id="profile-btn-gestante" onclick="trocarPerfil('GESTANTE')">🤰 Casa da Gestante</button>
+      <button type="button" class="profile-btn" id="profile-btn-onco" onclick="trocarPerfil('ONCOLOGICO')">🎗️ Oncológico</button>
+    </div>
+
     <div class="top-actions">
       <select id="date-select" class="date-selector" onchange="onDateChange()">
         <option value="">Carregando datas...</option>
       </select>
       <button class="btn primary" onclick="openFormModal()">+ Adicionar Paciente</button>
+      <button class="lockbtn" title="Área de administração" onclick="abrirLoginAdmin()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
     </div>
   </div>
 </header>
@@ -158,10 +204,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
             <th>Lanche (15h)</th>
             <th>Jantar (18h)</th>
             <th>Ceia (21h)</th>
+            <th>Observação</th>
           </tr>
         </thead>
         <tbody id="tb-pacientes">
-          <tr><td colspan="8" class="loader">Carregando dados...</td></tr>
+          <tr><td colspan="9" class="loader">Carregando dados...</td></tr>
         </tbody>
       </table>
     </div>
@@ -191,7 +238,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-print')">Cancelar</button>
-      <button class="btn primary" onclick="window.print()">Imprimir Etiqueta</button>
+      <button class="btn primary" onclick="imprimirEtiqueta()">Imprimir Etiqueta</button>
     </div>
   </div>
 </div>
@@ -223,31 +270,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         
         <hr style="border:0; border-top:1px solid var(--line); margin: 15px 0;">
         <p style="font-weight:600; margin-bottom: 10px; color: var(--mut); font-size:12px; text-transform:uppercase;">Refeições do Dia</p>
+        <p style="font-size:12px; color:var(--mut); margin-bottom:14px;">Clique para selecionar vários itens cadastrados, ou digite algo personalizado no campo de texto.</p>
 
-        <div class="field">
-          <label>Desjejum (6h)</label>
-          <input type="text" id="f-desjejum" placeholder="Detalhes do desjejum">
-        </div>
-        <div class="field">
-          <label>Colação (9h)</label>
-          <input type="text" id="f-colacao" placeholder="Detalhes da colação">
-        </div>
-        <div class="field">
-          <label>Almoço (12h)</label>
-          <input type="text" id="f-almoco" placeholder="Detalhes do almoço">
-        </div>
-        <div class="field">
-          <label>Lanche (15h)</label>
-          <input type="text" id="f-lanche" placeholder="Detalhes do lanche">
-        </div>
-        <div class="field">
-          <label>Jantar (18h)</label>
-          <input type="text" id="f-jantar" placeholder="Detalhes do jantar">
-        </div>
-        <div class="field">
-          <label>Ceia (21h)</label>
-          <input type="text" id="f-ceia" placeholder="Detalhes da ceia">
-        </div>
+        <div id="meal-fields"></div>
+
         <div class="field">
           <label>Observação</label>
           <textarea id="f-obs" placeholder="Observações adicionais (opcional)" style="min-height:60px"></textarea>
@@ -261,9 +287,68 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   </div>
 </div>
 
+<!-- Modal de Login Admin -->
+<div class="overlay" id="modal-admin-login">
+  <div class="modal" style="max-width: 380px;">
+    <div class="modal-header">
+      <h3>Área de Administração</h3>
+      <button class="xbtn" onclick="closeModal('modal-admin-login')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="admin-login-form" onsubmit="confirmarSenhaAdmin(event)">
+        <div class="field">
+          <label>Senha de administrador</label>
+          <input type="password" id="f-admin-senha" required placeholder="Digite a senha" autofocus>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeModal('modal-admin-login')">Cancelar</button>
+      <button type="submit" form="admin-login-form" class="btn primary" id="btn-admin-entrar">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Painel Admin (Catálogo de Itens de Dieta) -->
+<div class="overlay" id="modal-admin">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-header">
+      <h3>Cadastro de Itens de Dieta</h3>
+      <button class="xbtn" onclick="closeModal('modal-admin')">×</button>
+    </div>
+    <div class="modal-body" id="admin-body">
+      <div class="loader">Carregando catálogo...</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn primary" onclick="closeModal('modal-admin')">Concluído</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let dataPacientes = [];
   let currentDate = "";
+  let currentPerfil = localStorage.getItem('cg_perfil') || 'GESTANTE';
+  let catalogoItens = {};
+  let mealFormState = {};
+
+  const MEAL_CATEGORIES = [
+    { field: 'desjejum', categoria: 'Desjejum', label: 'Desjejum (6h)', printName: 'Desjejum 6H' },
+    { field: 'colacao', categoria: 'Colacao', label: 'Colação (9h)', printName: 'Colação 9H' },
+    { field: 'almoco', categoria: 'Almoco', label: 'Almoço (12h)', printName: 'Almoço 12H' },
+    { field: 'lanche', categoria: 'Lanche', label: 'Lanche (15h)', printName: 'Lanche 15H' },
+    { field: 'jantar', categoria: 'Jantar', label: 'Jantar (18h)', printName: 'Jantar 18H' },
+    { field: 'ceia', categoria: 'Ceia', label: 'Ceia (21h)', printName: 'Ceia 21H' }
+  ];
+
+  const MOCK_CATALOGO = {
+    Desjejum: ['CAFÉ COMPLETO', 'MINGAU DE AVEIA', 'CAFÉ COMPLETO DM'],
+    Colacao: ['SUCO', 'SUCO DM', 'VITAMINA'],
+    Almoco: ['GERAL', 'GERAL HAS DM', 'BRANDA'],
+    Lanche: ['VITAMINA', 'VITAMINA DM', 'BISCOITO'],
+    Jantar: ['BRANDA DE FRANGO', 'BRANDA DM HAS', 'SOPA'],
+    Ceia: ['MINGAU', 'MINGAU DM + 1 FRUTA']
+  };
 
   // Helper para hoje
   function getDataAtual() {
@@ -299,25 +384,55 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
   // Init
   document.addEventListener("DOMContentLoaded", () => {
+    aplicarTemaPerfil();
+    loadCatalogo();
     loadDates();
   });
 
+  // === Perfis ===
+  function trocarPerfil(perfil) {
+    if (perfil === currentPerfil) return;
+    currentPerfil = perfil;
+    localStorage.setItem('cg_perfil', perfil);
+    aplicarTemaPerfil();
+    showToast(perfil === 'ONCOLOGICO' ? '🎗️ Perfil Oncológico ativo' : '🤰 Perfil Casa da Gestante ativo');
+    loadDates();
+  }
+
+  function aplicarTemaPerfil() {
+    const isOnco = currentPerfil === 'ONCOLOGICO';
+    document.body.classList.toggle('theme-onco', isOnco);
+    document.getElementById('profile-btn-gestante').classList.toggle('active', !isOnco);
+    document.getElementById('profile-btn-onco').classList.toggle('active', isOnco);
+    document.getElementById('brand-title').innerText = isOnco ? 'Setor Oncológico' : 'Casa da Gestante';
+  }
+
+  // === Catálogo de Itens de Dieta ===
+  function loadCatalogo() {
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler((cat) => { catalogoItens = cat; }).getItensDieta();
+    } else {
+      catalogoItens = JSON.parse(JSON.stringify(MOCK_CATALOGO));
+    }
+  }
+
   function loadDates() {
     if (typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler(renderDates).getDatasDisponiveis();
+      google.script.run.withSuccessHandler(renderDates).getDatasDisponiveis(currentPerfil);
     } else {
-      setTimeout(() => renderDates(['17/07/2026', '18/07/2026']), 300);
+      const mockDates = currentPerfil === 'ONCOLOGICO' ? ['17/07/2026'] : ['17/07/2026', '18/07/2026'];
+      setTimeout(() => renderDates(mockDates), 300);
     }
   }
 
   function renderDates(dates) {
     const sel = document.getElementById("date-select");
     sel.innerHTML = "";
-    
+
     // Garantir que a data atual está na lista, se não, adiciona
     const hoje = getDataAtual();
     if (!dates.includes(hoje)) dates.push(hoje);
-    
+
     // Sort basic (assume formato dd/mm/yyyy) - simplify to just populate
     dates.forEach(d => {
       const opt = document.createElement("option");
@@ -325,26 +440,33 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       opt.innerText = d;
       sel.appendChild(opt);
     });
-    
+
     sel.value = hoje;
     onDateChange();
   }
 
   function onDateChange() {
     currentDate = document.getElementById("date-select").value;
-    document.getElementById("table-title").innerText = `Pacientes do Dia: ${currentDate}`;
-    
+    const perfilLabel = currentPerfil === 'ONCOLOGICO' ? 'Oncológico' : 'Casa da Gestante';
+    document.getElementById("table-title").innerText = `Pacientes do Dia (${perfilLabel}): ${currentDate}`;
+
     const tbody = document.getElementById("tb-pacientes");
-    tbody.innerHTML = "<tr><td colspan='8' class='loader'>Buscando pacientes...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='9' class='loader'>Buscando pacientes...</td></tr>";
 
     if (typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler(renderTable).getPacientesPorData(currentDate);
+      google.script.run.withSuccessHandler(renderTable).getPacientesPorData(currentDate, currentPerfil);
     } else {
       setTimeout(() => {
-        renderTable([
-          { id: 1, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
-          { id: 2, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
-        ]);
+        if (currentPerfil === 'ONCOLOGICO') {
+          renderTable([
+            { rowNumber: 2, prontuario_nome: "40521 - Carlos Eduardo Menezes", diagnostico: "Oncológico", dieta: "Branda Hipercalórica", desjejum: "MINGAU DE AVEIA + FRUTA", colacao: "SUCO ADOÇADO", almoco: "BRANDA COM FRANGO DESFIADO", lanche: "VITAMINA HIPERCALÓRICA", jantar: "SOPA CREMOSA", ceia: "MINGAU + COMPLEMENTO", observacao: "" }
+          ]);
+        } else {
+          renderTable([
+            { rowNumber: 2, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
+            { rowNumber: 3, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
+          ]);
+        }
       }, 500);
     }
   }
@@ -355,20 +477,20 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     tbody.innerHTML = "";
 
     if (pacientes.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='8' class='loader'>Nenhum paciente encontrado para esta data. Adicione um novo!</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='9' class='loader'>Nenhum paciente encontrado para esta data. Adicione um novo!</td></tr>";
       return;
     }
 
     pacientes.forEach((p, index) => {
       const tr = document.createElement("tr");
-      
+
       const tdInfo = document.createElement("td");
       tdInfo.innerHTML = `
         <div class="paciente-nome">${p.prontuario_nome}</div>
         <div class="paciente-diag">${p.diagnostico}</div>
         <button class="edit-btn" onclick="openFormModal(${index})">Editar paciente</button>
       `;
-      
+
       const tdDieta = document.createElement("td");
       tdDieta.innerHTML = `<span class="dieta-badge">${p.dieta}</span>`;
 
@@ -386,6 +508,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         <td>${renderMealBtn(p.lanche, 'Lanche 15H')}</td>
         <td>${renderMealBtn(p.jantar, 'Jantar 18H')}</td>
         <td>${renderMealBtn(p.ceia, 'Ceia 21H')}</td>
+        <td>${p.observacao ? p.observacao : '-'}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -407,11 +530,124 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     document.getElementById("modal-print").classList.add("open");
   }
 
+  // Impressão via nova janela: o app roda dentro de um iframe protegido pelo
+  // Google Apps Script, e window.print() chamado ali dentro é frequentemente
+  // bloqueado pelo navegador. Abrir uma janela própria contorna essa restrição.
+  function imprimirEtiqueta() {
+    const conteudo = document.getElementById("print-area").innerHTML;
+    const janela = window.open('', '_blank', 'width=480,height=380');
+
+    if (!janela) {
+      showToast("✗ Permita pop-ups no navegador para imprimir a etiqueta", "error");
+      return;
+    }
+
+    janela.document.write(`<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Etiqueta</title>
+<style>
+  @page { size: 104mm 56mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; color: #000; }
+  .label-preview { width: 104mm; height: 56mm; padding: 3mm 4mm; display: flex; flex-direction: column; justify-content: flex-start; }
+  .label-header { display: flex; justify-content: space-between; font-size: 10pt; font-weight: bold; margin-bottom: 4pt; text-transform: uppercase; letter-spacing: 0.3pt; }
+  .label-paciente { font-size: 12pt; font-weight: bold; margin-bottom: 3pt; line-height: 1.3; }
+  .label-refeicao { font-size: 14pt; font-weight: bold; margin-bottom: 2pt; text-transform: uppercase; }
+  .label-dieta { font-size: 11pt; font-weight: bold; }
+</style>
+</head><body><div class="label-preview">${conteudo}</div></body></html>`);
+    janela.document.close();
+
+    setTimeout(() => {
+      janela.focus();
+      janela.print();
+    }, 350);
+
+    janela.onafterprint = () => janela.close();
+  }
+
+  // === Chips de seleção múltipla + texto livre ===
+  function parseMealValue(categoria, value) {
+    if (!value) return { chips: [], texto: '' };
+    const catalogo = catalogoItens[categoria] || [];
+    const partes = value.split('+').map(s => s.trim()).filter(Boolean);
+    const chips = [];
+    const resto = [];
+    partes.forEach(parte => {
+      const match = catalogo.find(item => item.trim().toLowerCase() === parte.toLowerCase());
+      if (match && chips.indexOf(match) === -1) chips.push(match);
+      else resto.push(parte);
+    });
+    return { chips, texto: resto.join(' + ') };
+  }
+
+  function combineMealValue(field) {
+    const state = mealFormState[field];
+    const partes = [...state.chips];
+    if (state.texto && state.texto.trim()) partes.push(state.texto.trim());
+    return partes.join(' + ');
+  }
+
+  function toggleChip(field, item) {
+    const state = mealFormState[field];
+    const i = state.chips.indexOf(item);
+    if (i > -1) state.chips.splice(i, 1); else state.chips.push(item);
+    renderMealFields();
+  }
+
+  function renderMealFields() {
+    const container = document.getElementById('meal-fields');
+    container.innerHTML = '';
+
+    MEAL_CATEGORIES.forEach(cat => {
+      const wrap = document.createElement('div');
+      wrap.className = 'field';
+
+      const label = document.createElement('label');
+      label.textContent = cat.label;
+      wrap.appendChild(label);
+
+      const chipsDiv = document.createElement('div');
+      chipsDiv.className = 'chips';
+      const itens = catalogoItens[cat.categoria] || [];
+      const state = mealFormState[cat.field] || { chips: [], texto: '' };
+
+      if (itens.length === 0) {
+        const vazio = document.createElement('span');
+        vazio.className = 'chip-empty';
+        vazio.textContent = 'Nenhum item cadastrado ainda. Use a Administração (🔒) para cadastrar.';
+        chipsDiv.appendChild(vazio);
+      } else {
+        itens.forEach(item => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'chip' + (state.chips.includes(item) ? ' on' : '');
+          btn.textContent = item;
+          btn.onclick = () => toggleChip(cat.field, item);
+          chipsDiv.appendChild(btn);
+        });
+      }
+      wrap.appendChild(chipsDiv);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'f-' + cat.field + '-texto';
+      input.placeholder = 'Digite algo adicional (opcional)';
+      input.value = state.texto;
+      input.oninput = (e) => { mealFormState[cat.field].texto = e.target.value; };
+      wrap.appendChild(input);
+
+      container.appendChild(wrap);
+    });
+  }
+
   // === Modal Form (Adicionar/Editar) ===
   function openFormModal(index = null) {
     const form = document.getElementById("paciente-form");
     form.reset();
     document.getElementById("f-id").value = "";
+
+    mealFormState = {};
+    MEAL_CATEGORIES.forEach(cat => { mealFormState[cat.field] = { chips: [], texto: '' }; });
 
     if (index !== null) {
       document.getElementById("form-title").innerText = "Editar Paciente";
@@ -420,17 +656,16 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       document.getElementById("f-nome").value = p.prontuario_nome;
       document.getElementById("f-diag").value = p.diagnostico;
       document.getElementById("f-dieta").value = p.dieta;
-      document.getElementById("f-desjejum").value = p.desjejum;
-      document.getElementById("f-colacao").value = p.colacao;
-      document.getElementById("f-almoco").value = p.almoco;
-      document.getElementById("f-lanche").value = p.lanche;
-      document.getElementById("f-jantar").value = p.jantar;
-      document.getElementById("f-ceia").value = p.ceia;
       document.getElementById("f-obs").value = p.observacao;
+
+      MEAL_CATEGORIES.forEach(cat => {
+        mealFormState[cat.field] = parseMealValue(cat.categoria, p[cat.field]);
+      });
     } else {
       document.getElementById("form-title").innerText = "Adicionar Paciente";
     }
 
+    renderMealFields();
     document.getElementById("modal-form").classList.add("open");
   }
 
@@ -445,14 +680,9 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       prontuario_nome: document.getElementById("f-nome").value,
       diagnostico: document.getElementById("f-diag").value,
       dieta: document.getElementById("f-dieta").value,
-      desjejum: document.getElementById("f-desjejum").value,
-      colacao: document.getElementById("f-colacao").value,
-      almoco: document.getElementById("f-almoco").value,
-      lanche: document.getElementById("f-lanche").value,
-      jantar: document.getElementById("f-jantar").value,
-      ceia: document.getElementById("f-ceia").value,
       observacao: document.getElementById("f-obs").value
     };
+    MEAL_CATEGORIES.forEach(cat => { paciente[cat.field] = combineMealValue(cat.field); });
 
     if (typeof google !== 'undefined') {
       google.script.run.withSuccessHandler((res) => {
@@ -470,7 +700,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         btn.innerHTML = 'Salvar Paciente';
         showToast("✗ Erro ao salvar", "error");
         console.error(err);
-      }).salvarPaciente(currentDate, paciente);
+      }).salvarPaciente(currentDate, paciente, currentPerfil);
     } else {
       setTimeout(() => {
         btn.disabled = false;
@@ -478,6 +708,150 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         showToast("✓ Salvo localmente (modo Dev)!");
         closeModal("modal-form");
       }, 800);
+    }
+  }
+
+  // === Administração (catálogo de itens de dieta) ===
+  function abrirLoginAdmin() {
+    document.getElementById("admin-login-form").reset();
+    document.getElementById("modal-admin-login").classList.add("open");
+  }
+
+  function confirmarSenhaAdmin(e) {
+    e.preventDefault();
+    const senha = document.getElementById("f-admin-senha").value;
+    const btn = document.getElementById("btn-admin-entrar");
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ Verificando...</span>';
+
+    const aoConfirmar = (res) => {
+      btn.disabled = false;
+      btn.innerHTML = 'Entrar';
+      if (res.success) {
+        closeModal("modal-admin-login");
+        abrirPainelAdmin();
+      } else {
+        showToast("✗ Senha incorreta", "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoConfirmar).withFailureHandler(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'Entrar';
+        showToast("✗ Erro ao verificar senha", "error");
+      }).verificarSenhaAdmin(senha);
+    } else {
+      setTimeout(() => aoConfirmar({ success: senha === 'admin123' }), 400);
+    }
+  }
+
+  function abrirPainelAdmin() {
+    document.getElementById("modal-admin").classList.add("open");
+    renderAdminBody();
+  }
+
+  function renderAdminBody() {
+    const body = document.getElementById("admin-body");
+    body.innerHTML = '';
+
+    MEAL_CATEGORIES.forEach(cat => {
+      const secao = document.createElement('div');
+      secao.className = 'admin-cat';
+
+      const titulo = document.createElement('h4');
+      titulo.textContent = cat.label;
+      secao.appendChild(titulo);
+
+      const tagsDiv = document.createElement('div');
+      tagsDiv.className = 'admin-tags';
+      const itens = catalogoItens[cat.categoria] || [];
+
+      if (itens.length === 0) {
+        const vazio = document.createElement('span');
+        vazio.className = 'chip-empty';
+        vazio.textContent = 'Nenhum item cadastrado';
+        tagsDiv.appendChild(vazio);
+      } else {
+        itens.forEach(item => {
+          const tag = document.createElement('span');
+          tag.className = 'admin-tag';
+          const txt = document.createElement('span');
+          txt.textContent = item;
+          tag.appendChild(txt);
+          const rm = document.createElement('button');
+          rm.type = 'button';
+          rm.textContent = '×';
+          rm.title = 'Remover';
+          rm.onclick = () => removerItemAdmin(cat.categoria, item);
+          tag.appendChild(rm);
+          tagsDiv.appendChild(tag);
+        });
+      }
+      secao.appendChild(tagsDiv);
+
+      const addDiv = document.createElement('div');
+      addDiv.className = 'admin-add';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Novo item de ' + cat.label.split(' (')[0] + '...';
+      input.id = 'admin-input-' + cat.field;
+      addDiv.appendChild(input);
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'btn primary';
+      addBtn.textContent = '+ Adicionar';
+      addBtn.onclick = () => adicionarItemAdmin(cat.categoria, cat.field);
+      addDiv.appendChild(addBtn);
+
+      secao.appendChild(addDiv);
+      body.appendChild(secao);
+    });
+  }
+
+  function adicionarItemAdmin(categoria, field) {
+    const input = document.getElementById('admin-input-' + field);
+    const item = input.value.trim();
+    if (!item) return;
+
+    const aoSalvar = (res) => {
+      if (res.success) {
+        if (!catalogoItens[categoria]) catalogoItens[categoria] = [];
+        catalogoItens[categoria].push(item);
+        renderAdminBody();
+        showToast("✓ Item adicionado");
+      } else {
+        showToast("✗ Erro ao adicionar: " + res.error, "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoSalvar).withFailureHandler(() => {
+        showToast("✗ Erro ao adicionar item", "error");
+      }).adicionarItemDieta(categoria, item);
+    } else {
+      setTimeout(() => aoSalvar({ success: true }), 300);
+    }
+  }
+
+  function removerItemAdmin(categoria, item) {
+    const aoRemover = (res) => {
+      if (res.success) {
+        catalogoItens[categoria] = (catalogoItens[categoria] || []).filter(i => i !== item);
+        renderAdminBody();
+        showToast("✓ Item removido");
+      } else {
+        showToast("✗ Erro ao remover: " + res.error, "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoRemover).withFailureHandler(() => {
+        showToast("✗ Erro ao remover item", "error");
+      }).removerItemDieta(categoria, item);
+    } else {
+      setTimeout(() => aoRemover({ success: true }), 300);
     }
   }
 
