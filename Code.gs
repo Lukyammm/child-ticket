@@ -15,9 +15,34 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// Retorna a planilha onde o script está sendo executado
+// Executado automaticamente pelo Google Sheets sempre que a planilha é aberta.
+// Aproveita esse momento (onde SpreadsheetApp.getActiveSpreadsheet() funciona)
+// para guardar o ID da planilha, já que ao rodar como Web App (doGet) não existe
+// "planilha ativa" mesmo quando o script está vinculado a ela.
+function onOpen() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (ss) {
+    PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
+  }
+}
+
+// Retorna a planilha onde o script está vinculado (a mesma em que foi colado e executado)
 function getSpreadsheet_() {
-  return SpreadsheetApp.getActiveSpreadsheet();
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (id) {
+    return SpreadsheetApp.openById(id);
+  }
+
+  // Fallback: caso ainda não exista ID salvo (script nunca aberto pela UI do
+  // Sheets), tenta pegar a planilha ativa - funciona em contextos que não são
+  // Web App (ex: executando uma função manualmente pelo editor de script).
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (ss) {
+    PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
+    return ss;
+  }
+
+  throw new Error('Não foi possível identificar a planilha. Abra a planilha onde este script está vinculado ao menos uma vez pelo Google Sheets antes de acessar o link do sistema.');
 }
 
 // Resolve o nome real da aba na planilha para o perfil e data informados
