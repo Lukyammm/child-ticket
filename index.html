@@ -57,6 +57,10 @@ body { font-family: var(--body); background: var(--paper); color: var(--ink); fo
 .lockbtn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--mut); cursor: pointer; display: grid; place-items: center; transition: .2s; }
 .lockbtn:hover { color: var(--pri); border-color: var(--pri); background: var(--pri-s); }
 
+.btn-loading { display: inline-flex; align-items: center; gap: 6px; }
+.spinner { animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: #fff; cursor: pointer; transition: .2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
 .btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(0,0,0,0.1); transform: translate(-50%, -50%); transition: width .4s, height .4s; }
 .btn:active::before { width: 300px; height: 300px; }
@@ -115,15 +119,18 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .chip-empty { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
 
 /* Painel de Administração */
-.admin-cat { margin-bottom: 20px; }
-.admin-cat h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); margin-bottom: 8px; }
-.admin-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.admin-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--pri-s); color: var(--pri-d); padding: 5px 8px 5px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; }
-.admin-tag button { border: none; background: rgba(0,0,0,.08); color: inherit; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-size: 11px; line-height: 1; }
-.admin-tag button:hover { background: rgba(0,0,0,.18); }
-.admin-add { display: flex; gap: 8px; }
+.admin-panel-desc { font-size: 13px; color: var(--mut); margin-bottom: 18px; line-height: 1.5; }
+.admin-add { display: flex; gap: 8px; margin-bottom: 18px; }
 .admin-add input { flex: 1; }
 .admin-add button { white-space: nowrap; }
+.admin-count { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--mut); margin-bottom: 10px; }
+.admin-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-tag { display: inline-flex; align-items: center; gap: 7px; background: var(--pri-s); color: var(--pri-d); padding: 7px 10px 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.admin-tag button { border: none; background: rgba(0,0,0,.08); color: inherit; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-size: 12px; line-height: 1; flex-shrink: 0; transition: .15s; }
+.admin-tag button:hover { background: rgba(0,0,0,.2); }
+.admin-empty { text-align: center; padding: 32px 16px; border: 1.5px dashed var(--line); border-radius: 12px; color: var(--mut); }
+.admin-empty svg { margin-bottom: 8px; opacity: .6; }
+.admin-empty p { font-size: 13px; }
 
 /* Label Preview (Screen) */
 .label-preview-wrapper { background: var(--paper); padding: 20px; display: flex; justify-content: center; }
@@ -171,8 +178,14 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     </a>
 
     <div class="profile-switch" role="tablist" aria-label="Seletor de Perfil">
-      <button type="button" class="profile-btn active" id="profile-btn-gestante" onclick="trocarPerfil('GESTANTE')">🤰 Casa da Gestante</button>
-      <button type="button" class="profile-btn" id="profile-btn-onco" onclick="trocarPerfil('ONCOLOGICO')">🎗️ Oncológico</button>
+      <button type="button" class="profile-btn active" id="profile-btn-gestante" onclick="trocarPerfil('GESTANTE')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        Casa da Gestante
+      </button>
+      <button type="button" class="profile-btn" id="profile-btn-onco" onclick="trocarPerfil('ONCOLOGICO')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-2.2 2.8-2.2 6.2 0 9 2.2-2.8 2.2-6.2 0-9z"/><path d="M12 12l-5.5 9"/><path d="M12 12l5.5 9"/></svg>
+        Oncológico
+      </button>
     </div>
 
     <div class="top-actions">
@@ -311,13 +324,16 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
 <!-- Modal Painel Admin (Catálogo de Itens de Dieta) -->
 <div class="overlay" id="modal-admin">
-  <div class="modal" style="max-width: 560px;">
+  <div class="modal" style="max-width: 520px;">
     <div class="modal-header">
-      <h3>Cadastro de Itens de Dieta</h3>
+      <h3>Itens de Dieta</h3>
       <button class="xbtn" onclick="closeModal('modal-admin')">×</button>
     </div>
-    <div class="modal-body" id="admin-body">
-      <div class="loader">Carregando catálogo...</div>
+    <div class="modal-body">
+      <p class="admin-panel-desc">Esses itens ficam disponíveis para seleção rápida em todas as refeições (Desjejum, Colação, Almoço, Lanche, Jantar e Ceia), para os dois perfis.</p>
+      <div id="admin-body">
+        <div class="loader">Carregando catálogo...</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn primary" onclick="closeModal('modal-admin')">Concluído</button>
@@ -329,26 +345,21 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   let dataPacientes = [];
   let currentDate = "";
   let currentPerfil = localStorage.getItem('cg_perfil') || 'GESTANTE';
-  let catalogoItens = {};
+  let catalogoItens = []; // lista única de itens, compartilhada entre refeições e perfis
   let mealFormState = {};
 
   const MEAL_CATEGORIES = [
-    { field: 'desjejum', categoria: 'Desjejum', label: 'Desjejum (6h)', printName: 'Desjejum 6H' },
-    { field: 'colacao', categoria: 'Colacao', label: 'Colação (9h)', printName: 'Colação 9H' },
-    { field: 'almoco', categoria: 'Almoco', label: 'Almoço (12h)', printName: 'Almoço 12H' },
-    { field: 'lanche', categoria: 'Lanche', label: 'Lanche (15h)', printName: 'Lanche 15H' },
-    { field: 'jantar', categoria: 'Jantar', label: 'Jantar (18h)', printName: 'Jantar 18H' },
-    { field: 'ceia', categoria: 'Ceia', label: 'Ceia (21h)', printName: 'Ceia 21H' }
+    { field: 'desjejum', label: 'Desjejum (6h)', printName: 'Desjejum 6H' },
+    { field: 'colacao', label: 'Colação (9h)', printName: 'Colação 9H' },
+    { field: 'almoco', label: 'Almoço (12h)', printName: 'Almoço 12H' },
+    { field: 'lanche', label: 'Lanche (15h)', printName: 'Lanche 15H' },
+    { field: 'jantar', label: 'Jantar (18h)', printName: 'Jantar 18H' },
+    { field: 'ceia', label: 'Ceia (21h)', printName: 'Ceia 21H' }
   ];
 
-  const MOCK_CATALOGO = {
-    Desjejum: ['CAFÉ COMPLETO', 'MINGAU DE AVEIA', 'CAFÉ COMPLETO DM'],
-    Colacao: ['SUCO', 'SUCO DM', 'VITAMINA'],
-    Almoco: ['GERAL', 'GERAL HAS DM', 'BRANDA'],
-    Lanche: ['VITAMINA', 'VITAMINA DM', 'BISCOITO'],
-    Jantar: ['BRANDA DE FRANGO', 'BRANDA DM HAS', 'SOPA'],
-    Ceia: ['MINGAU', 'MINGAU DM + 1 FRUTA']
-  };
+  const MOCK_CATALOGO = ['CAFÉ COMPLETO', 'CAFÉ COMPLETO DM', 'MINGAU DE AVEIA', 'SUCO', 'SUCO DM', 'VITAMINA', 'VITAMINA DM', 'GERAL', 'GERAL HAS DM', 'BRANDA', 'BISCOITO', 'MINGAU'];
+
+  const SPINNER_SVG = '<svg class="spinner" viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="40 100"/></svg>';
 
   // Helper para hoje
   function getDataAtual() {
@@ -395,7 +406,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     currentPerfil = perfil;
     localStorage.setItem('cg_perfil', perfil);
     aplicarTemaPerfil();
-    showToast(perfil === 'ONCOLOGICO' ? '🎗️ Perfil Oncológico ativo' : '🤰 Perfil Casa da Gestante ativo');
+    showToast(perfil === 'ONCOLOGICO' ? 'Perfil Oncológico ativo' : 'Perfil Casa da Gestante ativo');
     loadDates();
   }
 
@@ -412,7 +423,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     if (typeof google !== 'undefined') {
       google.script.run.withSuccessHandler((cat) => { catalogoItens = cat; }).getItensDieta();
     } else {
-      catalogoItens = JSON.parse(JSON.stringify(MOCK_CATALOGO));
+      catalogoItens = [...MOCK_CATALOGO];
     }
   }
 
@@ -526,7 +537,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     document.getElementById("lbl-refeicao").innerText = mealName;
     document.getElementById("lbl-dieta").innerText = p.dieta.toUpperCase();
 
-    showToast("📋 Etiqueta pronta para impressão");
+    showToast("Etiqueta pronta para impressão");
     document.getElementById("modal-print").classList.add("open");
   }
 
@@ -538,7 +549,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const janela = window.open('', '_blank', 'width=480,height=380');
 
     if (!janela) {
-      showToast("✗ Permita pop-ups no navegador para imprimir a etiqueta", "error");
+      showToast("Permita pop-ups no navegador para imprimir a etiqueta", "error");
       return;
     }
 
@@ -566,14 +577,13 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   }
 
   // === Chips de seleção múltipla + texto livre ===
-  function parseMealValue(categoria, value) {
+  function parseMealValue(value) {
     if (!value) return { chips: [], texto: '' };
-    const catalogo = catalogoItens[categoria] || [];
     const partes = value.split('+').map(s => s.trim()).filter(Boolean);
     const chips = [];
     const resto = [];
     partes.forEach(parte => {
-      const match = catalogo.find(item => item.trim().toLowerCase() === parte.toLowerCase());
+      const match = catalogoItens.find(item => item.trim().toLowerCase() === parte.toLowerCase());
       if (match && chips.indexOf(match) === -1) chips.push(match);
       else resto.push(parte);
     });
@@ -608,13 +618,13 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
       const chipsDiv = document.createElement('div');
       chipsDiv.className = 'chips';
-      const itens = catalogoItens[cat.categoria] || [];
+      const itens = catalogoItens;
       const state = mealFormState[cat.field] || { chips: [], texto: '' };
 
       if (itens.length === 0) {
         const vazio = document.createElement('span');
         vazio.className = 'chip-empty';
-        vazio.textContent = 'Nenhum item cadastrado ainda. Use a Administração (🔒) para cadastrar.';
+        vazio.textContent = 'Nenhum item cadastrado ainda. Cadastre pelo ícone de cadeado no topo da página.';
         chipsDiv.appendChild(vazio);
       } else {
         itens.forEach(item => {
@@ -659,7 +669,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       document.getElementById("f-obs").value = p.observacao;
 
       MEAL_CATEGORIES.forEach(cat => {
-        mealFormState[cat.field] = parseMealValue(cat.categoria, p[cat.field]);
+        mealFormState[cat.field] = parseMealValue(p[cat.field]);
       });
     } else {
       document.getElementById("form-title").innerText = "Adicionar Paciente";
@@ -673,7 +683,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     e.preventDefault();
     const btn = document.getElementById("btn-salvar");
     btn.disabled = true;
-    btn.innerHTML = '<span>⏳ Salvando...</span>';
+    btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Salvando...</span>';
 
     const paciente = {
       rowNumber: document.getElementById("f-id").value || null,
@@ -689,23 +699,23 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         btn.disabled = false;
         btn.innerHTML = 'Salvar Paciente';
         if (res.success) {
-          showToast("✓ Paciente salvo com sucesso!");
+          showToast("Paciente salvo com sucesso!");
           closeModal("modal-form");
           onDateChange(); // Recarrega a lista do dia
         } else {
-          showToast("✗ Erro ao salvar: " + res.error, "error");
+          showToast("Erro ao salvar: " + res.error, "error");
         }
       }).withFailureHandler((err) => {
         btn.disabled = false;
         btn.innerHTML = 'Salvar Paciente';
-        showToast("✗ Erro ao salvar", "error");
+        showToast("Erro ao salvar", "error");
         console.error(err);
       }).salvarPaciente(currentDate, paciente, currentPerfil);
     } else {
       setTimeout(() => {
         btn.disabled = false;
         btn.innerHTML = 'Salvar Paciente';
-        showToast("✓ Salvo localmente (modo Dev)!");
+        showToast("Salvo localmente (modo Dev)!");
         closeModal("modal-form");
       }, 800);
     }
@@ -722,7 +732,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const senha = document.getElementById("f-admin-senha").value;
     const btn = document.getElementById("btn-admin-entrar");
     btn.disabled = true;
-    btn.innerHTML = '<span>⏳ Verificando...</span>';
+    btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Verificando...</span>';
 
     const aoConfirmar = (res) => {
       btn.disabled = false;
@@ -731,7 +741,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         closeModal("modal-admin-login");
         abrirPainelAdmin();
       } else {
-        showToast("✗ Senha incorreta", "error");
+        showToast("Senha incorreta", "error");
       }
     };
 
@@ -739,7 +749,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       google.script.run.withSuccessHandler(aoConfirmar).withFailureHandler(() => {
         btn.disabled = false;
         btn.innerHTML = 'Entrar';
-        showToast("✗ Erro ao verificar senha", "error");
+        showToast("Erro ao verificar senha", "error");
       }).verificarSenhaAdmin(senha);
     } else {
       setTimeout(() => aoConfirmar({ success: senha === 'admin123' }), 400);
@@ -755,101 +765,96 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const body = document.getElementById("admin-body");
     body.innerHTML = '';
 
-    MEAL_CATEGORIES.forEach(cat => {
-      const secao = document.createElement('div');
-      secao.className = 'admin-cat';
+    const addDiv = document.createElement('div');
+    addDiv.className = 'admin-add';
 
-      const titulo = document.createElement('h4');
-      titulo.textContent = cat.label;
-      secao.appendChild(titulo);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Novo item de dieta...';
+    input.id = 'admin-input-item';
+    input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); adicionarItemAdmin(); } };
+    addDiv.appendChild(input);
 
-      const tagsDiv = document.createElement('div');
-      tagsDiv.className = 'admin-tags';
-      const itens = catalogoItens[cat.categoria] || [];
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'btn primary';
+    addBtn.textContent = '+ Adicionar';
+    addBtn.onclick = () => adicionarItemAdmin();
+    addDiv.appendChild(addBtn);
 
-      if (itens.length === 0) {
-        const vazio = document.createElement('span');
-        vazio.className = 'chip-empty';
-        vazio.textContent = 'Nenhum item cadastrado';
-        tagsDiv.appendChild(vazio);
-      } else {
-        itens.forEach(item => {
-          const tag = document.createElement('span');
-          tag.className = 'admin-tag';
-          const txt = document.createElement('span');
-          txt.textContent = item;
-          tag.appendChild(txt);
-          const rm = document.createElement('button');
-          rm.type = 'button';
-          rm.textContent = '×';
-          rm.title = 'Remover';
-          rm.onclick = () => removerItemAdmin(cat.categoria, item);
-          tag.appendChild(rm);
-          tagsDiv.appendChild(tag);
-        });
-      }
-      secao.appendChild(tagsDiv);
+    body.appendChild(addDiv);
 
-      const addDiv = document.createElement('div');
-      addDiv.className = 'admin-add';
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Novo item de ' + cat.label.split(' (')[0] + '...';
-      input.id = 'admin-input-' + cat.field;
-      addDiv.appendChild(input);
+    if (catalogoItens.length === 0) {
+      const vazio = document.createElement('div');
+      vazio.className = 'admin-empty';
+      vazio.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v2h6V3"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="13" y2="18"/></svg><p>Nenhum item cadastrado ainda</p>';
+      body.appendChild(vazio);
+      return;
+    }
 
-      const addBtn = document.createElement('button');
-      addBtn.type = 'button';
-      addBtn.className = 'btn primary';
-      addBtn.textContent = '+ Adicionar';
-      addBtn.onclick = () => adicionarItemAdmin(cat.categoria, cat.field);
-      addDiv.appendChild(addBtn);
+    const count = document.createElement('div');
+    count.className = 'admin-count';
+    count.textContent = catalogoItens.length + (catalogoItens.length === 1 ? ' item cadastrado' : ' itens cadastrados');
+    body.appendChild(count);
 
-      secao.appendChild(addDiv);
-      body.appendChild(secao);
+    const tagsDiv = document.createElement('div');
+    tagsDiv.className = 'admin-tags';
+    catalogoItens.forEach(item => {
+      const tag = document.createElement('span');
+      tag.className = 'admin-tag';
+      const txt = document.createElement('span');
+      txt.textContent = item;
+      tag.appendChild(txt);
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.textContent = '×';
+      rm.title = 'Remover';
+      rm.onclick = () => removerItemAdmin(item);
+      tag.appendChild(rm);
+      tagsDiv.appendChild(tag);
     });
+    body.appendChild(tagsDiv);
   }
 
-  function adicionarItemAdmin(categoria, field) {
-    const input = document.getElementById('admin-input-' + field);
+  function adicionarItemAdmin() {
+    const input = document.getElementById('admin-input-item');
     const item = input.value.trim();
     if (!item) return;
 
     const aoSalvar = (res) => {
       if (res.success) {
-        if (!catalogoItens[categoria]) catalogoItens[categoria] = [];
-        catalogoItens[categoria].push(item);
+        catalogoItens.push(item);
         renderAdminBody();
-        showToast("✓ Item adicionado");
+        showToast("Item adicionado");
       } else {
-        showToast("✗ Erro ao adicionar: " + res.error, "error");
+        showToast("Erro ao adicionar: " + res.error, "error");
       }
     };
 
     if (typeof google !== 'undefined') {
       google.script.run.withSuccessHandler(aoSalvar).withFailureHandler(() => {
-        showToast("✗ Erro ao adicionar item", "error");
-      }).adicionarItemDieta(categoria, item);
+        showToast("Erro ao adicionar item", "error");
+      }).adicionarItemDieta(item);
     } else {
       setTimeout(() => aoSalvar({ success: true }), 300);
     }
   }
 
-  function removerItemAdmin(categoria, item) {
+  function removerItemAdmin(item) {
     const aoRemover = (res) => {
       if (res.success) {
-        catalogoItens[categoria] = (catalogoItens[categoria] || []).filter(i => i !== item);
+        catalogoItens = catalogoItens.filter(i => i !== item);
         renderAdminBody();
-        showToast("✓ Item removido");
+        showToast("Item removido");
       } else {
-        showToast("✗ Erro ao remover: " + res.error, "error");
+        showToast("Erro ao remover: " + res.error, "error");
       }
     };
 
     if (typeof google !== 'undefined') {
       google.script.run.withSuccessHandler(aoRemover).withFailureHandler(() => {
-        showToast("✗ Erro ao remover item", "error");
-      }).removerItemDieta(categoria, item);
+        showToast("Erro ao remover item", "error");
+      }).removerItemDieta(item);
     } else {
       setTimeout(() => aoRemover({ success: true }), 300);
     }
