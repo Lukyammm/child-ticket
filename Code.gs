@@ -74,6 +74,16 @@ function salvarPaciente(dataStr, paciente) {
         "Desjejum - 6h", "Colação - 9h", "Almoço - 12h", 
         "Lanche - 15h", "Jantar - 18h", "Ceia - 21h", "Observação"
       ]);
+      
+      // Formatação do cabeçalho recém-criado
+      const headerRange = sheet.getRange(1, 1, 1, 10);
+      headerRange.setFontWeight("bold");
+      headerRange.setBackground("#e3f0ea"); // Cor do design system
+      sheet.setFrozenRows(1); // Congela a primeira linha
+      
+      for (let i = 1; i <= 10; i++) {
+        sheet.autoResizeColumn(i);
+      }
     }
     
     const rowData = [
