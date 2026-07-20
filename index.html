@@ -695,7 +695,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
     MEAL_CATEGORIES.forEach(cat => {
       const state = mealFormState[cat.field] || { chips: [], texto: '' };
-      if (state.collapsed === undefined) state.collapsed = state.chips.length === 0 && !state.texto;
+      // Sempre começa fechado, mesmo com itens já selecionados (ex: ao editar um
+      // paciente com as 6 refeições preenchidas). Abrir tudo de uma vez mostra 6
+      // caixas de busca + 6 paredes de chips simultaneamente — poluição visual
+      // que o acordeão existe justamente para evitar.
+      if (state.collapsed === undefined) state.collapsed = true;
       if (state.search === undefined) state.search = '';
 
       const group = document.createElement('div');
