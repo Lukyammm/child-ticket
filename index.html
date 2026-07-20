@@ -3,404 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Casa da Gestante - Controle de Dietas</title>
+<title>Casa da Gestante - Etiquetas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink: #0f172a;
-  --paper: #f8fafc;
+  --ink: #1d2a24;
+  --paper: #f4f6f3;
   --card: #ffffff;
-  --line: #e2e8f0;
-  --mut: #64748b;
-  --pri: #059669;
-  --pri-d: #047857;
-  --pri-s: #d1fae5;
-  --danger: #ef4444;
-  --danger-s: #fee2e2;
-  --r: 16px;
-  --r-sm: 8px;
-  --sh: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --sh-lift: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --body: 'Outfit', system-ui, sans-serif;
+  --line: #e0e6e0;
+  --mut: #68766e;
+  --pri: #0e7a5f;
+  --pri-d: #0a5a46;
+  --pri-s: #e3f0ea;
+  --r: 12px;
+  --sh: 0 1px 2px rgba(29,42,36,.06), 0 4px 14px rgba(29,42,36,.05);
+  --sh-lift: 0 6px 16px rgba(29,42,36,.10), 0 2px 5px rgba(29,42,36,.06);
+  --body: 'Inter', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { 
-  font-family: var(--body); 
-  background: var(--paper); 
-  color: var(--ink); 
-  font-size: 15px; 
-  line-height: 1.5; 
-  min-height: 100vh; 
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Typography Utilities */
-h1, h2, h3, h4 { color: var(--ink); font-weight: 600; letter-spacing: -0.02em; }
+body { font-family: var(--body); background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh; }
 
 /* Topbar */
-.topbar { 
-  position: sticky; 
-  top: 0; 
-  z-index: 40; 
-  background: rgba(255, 255, 255, 0.85); 
-  backdrop-filter: blur(12px); 
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line); 
-}
-.topbar .in { 
-  max-width: 1400px; 
-  margin: 0 auto; 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-  padding: 16px 24px; 
-  flex-wrap: wrap; 
-  gap: 16px; 
-}
-.brand { 
-  display: flex; 
-  align-items: center; 
-  gap: 14px; 
-  text-decoration: none; 
-  color: inherit; 
-  transition: opacity 0.2s;
-}
-.brand:hover { opacity: 0.8; }
-.brand .dot { 
-  width: 42px; 
-  height: 42px; 
-  background: var(--pri-s); 
-  color: var(--pri); 
-  border-radius: 12px; 
-  display: grid; 
-  place-items: center; 
-}
-.brand b { font-weight: 700; font-size: 20px; line-height: 1.1; }
-.brand small { display: block; color: var(--mut); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; margin-top: 2px; }
+.topbar { position: sticky; top: 0; z-index: 40; background: rgba(244, 246, 243, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.topbar .in { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.brand .dot { width: 34px; height: 34px; background: var(--pri-s); color: var(--pri); border-radius: 50%; display: grid; place-items: center; }
+.brand b { font-weight: 600; font-size: 17px; }
+.brand small { display: block; color: var(--mut); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; }
 
-.top-actions { display: flex; align-items: center; gap: 16px; }
-.date-selector { 
-  padding: 10px 16px; 
-  border: 1px solid var(--line); 
-  border-radius: var(--r-sm); 
-  background: var(--paper); 
-  font-family: inherit; 
-  font-size: 15px; 
-  font-weight: 600; 
-  color: var(--ink); 
-  cursor: pointer; 
-  outline: none; 
-  transition: all 0.2s;
-}
-.date-selector:hover { border-color: #cbd5e1; background: #fff; }
-.date-selector:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(5,150,105,.15); background: #fff; }
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.date-selector { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; outline: none; }
+.date-selector:focus { border-color: var(--pri); }
 
-.btn { 
-  padding: 10px 20px; 
-  border-radius: var(--r-sm); 
-  font-size: 15px; 
-  font-weight: 600; 
-  border: 1px solid var(--line); 
-  background: #fff; 
-  color: var(--ink);
-  cursor: pointer; 
-  transition: all 0.2s ease; 
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center; 
-  gap: 8px;
-}
-.btn:hover { background: var(--paper); border-color: #cbd5e1; }
-.btn.primary { background: var(--pri); color: #fff; border-color: var(--pri); box-shadow: 0 4px 12px rgba(5,150,105,0.25); }
-.btn.primary:hover { background: var(--pri-d); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(5,150,105,0.3); }
-.btn:active { transform: translateY(0); }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: #fff; cursor: pointer; transition: .15s; display: inline-flex; align-items: center; justify-content: center; }
+.btn:hover { background: var(--paper); }
+.btn.primary { background: var(--pri); color: #fff; border-color: var(--pri); }
+.btn.primary:hover { background: var(--pri-d); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Layout & Table */
-main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
-.card { 
-  background: var(--card); 
-  border: 1px solid var(--line); 
-  border-radius: var(--r); 
-  box-shadow: var(--sh); 
-  overflow: hidden; 
-  animation: fadeUp 0.4s ease-out forwards;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
-}
-
-.card-header { 
-  padding: 20px 24px; 
-  border-bottom: 1px solid var(--line); 
-  background: var(--card); 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-}
-.card-header h2 { font-size: 20px; }
+main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--line); background: var(--card); display: flex; justify-content: space-between; align-items: center; }
+.card-header h2 { font-size: 18px; font-weight: 600; }
 
 .tbl-wrap { overflow-x: auto; }
-.tbl { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; }
-.tbl th { 
-  font-size: 12px; 
-  letter-spacing: .05em; 
-  text-transform: uppercase; 
-  color: var(--mut); 
-  font-weight: 600;
-  padding: 16px 24px; 
-  border-bottom: 1px solid var(--line); 
-  background: var(--paper); 
-}
-.tbl td { 
-  padding: 16px 24px; 
-  border-bottom: 1px solid var(--line); 
-  vertical-align: top; 
-  transition: background 0.2s;
-}
-.tbl tbody tr { transition: transform 0.15s, box-shadow 0.15s; }
-.tbl tbody tr:hover td { background: var(--paper); }
+.tbl { width: 100%; border-collapse: collapse; text-align: left; }
+.tbl th { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--mut); padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.tbl td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl tbody tr:hover { background: #fafafa; }
 .tbl tbody tr:last-child td { border-bottom: none; }
 
-.paciente-nome { font-weight: 700; color: var(--ink); font-size: 16px; margin-bottom: 4px; line-height: 1.3; }
-.paciente-diag { font-size: 13.5px; color: var(--mut); font-weight: 500; }
-.dieta-badge { 
-  display: inline-flex; 
-  align-items: center;
-  background: var(--pri-s); 
-  color: var(--pri-d); 
-  padding: 6px 10px; 
-  border-radius: 8px; 
-  font-size: 13px; 
-  font-weight: 600; 
-  border: 1px solid rgba(5,150,105,0.1);
-}
+.paciente-nome { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.paciente-diag { font-size: 12px; color: var(--mut); }
+.dieta-badge { display: inline-block; background: var(--pri-s); color: var(--pri-d); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
 
-.meal-btn { 
-  background: #fff; 
-  border: 1px solid var(--line); 
-  color: var(--mut); 
-  padding: 8px 12px; 
-  border-radius: var(--r-sm); 
-  font-size: 13px; 
-  font-weight: 500; 
-  cursor: pointer; 
-  transition: all 0.2s ease; 
-  display: block; 
-  width: 100%; 
-  text-align: left; 
-  margin-bottom: 6px; 
-  font-family: inherit;
-}
-.meal-btn:hover { 
-  border-color: var(--pri); 
-  color: var(--pri-d); 
-  background: var(--pri-s); 
-  transform: translateX(2px);
-}
+.meal-btn { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; display: block; width: 100%; text-align: left; margin-bottom: 4px; }
+.meal-btn:hover { border-color: var(--pri); color: var(--pri-d); background: var(--pri-s); }
 .meal-btn:last-child { margin-bottom: 0; }
 
-.edit-btn { 
-  background: none; 
-  border: none; 
-  color: var(--pri); 
-  font-size: 13px; 
-  font-weight: 600; 
-  cursor: pointer; 
-  transition: color 0.2s; 
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.edit-btn:hover { color: var(--pri-d); text-decoration: underline; }
-
 /* Modal */
-.overlay { 
-  position: fixed; 
-  inset: 0; 
-  background: rgba(15, 23, 42, 0.6); 
-  backdrop-filter: blur(4px);
-  z-index: 60; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  padding: 20px; 
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-.overlay.open { opacity: 1; pointer-events: auto; }
-
-.modal { 
-  background: #fff; 
-  border-radius: 20px; 
-  width: 100%; 
-  max-width: 540px; 
-  box-shadow: var(--sh-lift); 
-  overflow: hidden; 
-  transform: scale(0.95) translateY(10px);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
-.overlay.open .modal { transform: scale(1) translateY(0); }
-
-.modal-header { 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-  padding: 20px 24px; 
-  border-bottom: 1px solid var(--line); 
-  background: #fff;
-  z-index: 2;
-}
-.modal-header h3 { font-size: 18px; }
-.xbtn { 
-  background: var(--paper); 
-  border: none; 
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; 
-  color: var(--mut); 
-  cursor: pointer; 
-  transition: all 0.2s;
-}
-.xbtn:hover { background: #e2e8f0; color: var(--ink); }
-
-.modal-body { 
-  padding: 24px; 
-  overflow-y: auto; 
-  flex: 1;
-}
-.modal-footer { 
-  padding: 20px 24px; 
-  border-top: 1px solid var(--line); 
-  display: flex; 
-  gap: 12px; 
-  justify-content: flex-end; 
-  background: var(--paper);
-}
+.overlay { position: fixed; inset: 0; background: rgba(29, 42, 36, 0.45); z-index: 60; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+.overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; animation: up .2s ease-out; position: relative; margin: auto; }
+@keyframes up { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.xbtn { background: none; border: none; font-size: 20px; color: var(--mut); cursor: pointer; }
+.modal-body { padding: 24px 20px; max-height: 70vh; overflow-y: auto; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid var(--line); display: flex; gap: 10px; justify-content: flex-end; }
 
 /* Forms */
-.field { margin-bottom: 18px; }
-.field label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #334155; }
-.field input, .field select, .field textarea { 
-  width: 100%; 
-  border: 1px solid var(--line); 
-  border-radius: 10px; 
-  padding: 12px 16px; 
-  background: #fff; 
-  font-family: inherit; 
-  font-size: 15px; 
-  color: var(--ink);
-  outline: none; 
-  transition: all 0.2s; 
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02) inset;
-}
-.field input::placeholder, .field textarea::placeholder { color: #94a3b8; }
-.field input:focus, .field select:focus, .field textarea:focus { 
-  border-color: var(--pri); 
-  box-shadow: 0 0 0 4px rgba(5,150,105,.1); 
-}
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.field { margin-bottom: 15px; }
+.field label { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 6px; }
+.field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fff; font-family: inherit; font-size: 14px; outline: none; transition: .15s; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 
 /* Label Preview (Screen) */
-.label-preview-wrapper { 
-  background: var(--paper); 
-  padding: 30px; 
-  display: flex; 
-  justify-content: center; 
-  border-bottom: 1px solid var(--line);
-}
-.label-preview { 
-  width: 104mm; 
-  height: 56mm; 
-  background: #fff; 
-  border: 1px solid #cbd5e1; 
-  box-shadow: var(--sh-lift); 
-  padding: 6mm; 
-  box-sizing: border-box; 
-  display: flex; 
-  flex-direction: column; 
-  justify-content: center; 
-  font-family: 'Inter', Arial, sans-serif; 
-  color: #000; 
-  border-radius: 4px;
-}
-.label-header { 
-  display: flex; 
-  justify-content: space-between; 
-  font-size: 13px; 
-  font-weight: 700; 
-  margin-bottom: 10px; 
-  text-transform: uppercase; 
-  color: #333;
-  border-bottom: 2px solid #000;
-  padding-bottom: 4px;
-}
-.label-paciente { font-size: 16px; font-weight: 800; margin-bottom: 8px; line-height: 1.3; }
-.label-refeicao { font-size: 18px; font-weight: 800; margin-bottom: 6px; text-transform: uppercase; background: #000; color: #fff; padding: 4px 8px; display: inline-block; width: fit-content; }
-.label-dieta { font-size: 15px; font-weight: 700; border: 1px dashed #000; padding: 4px 8px; display: inline-block; width: fit-content; }
+.label-preview-wrapper { background: var(--paper); padding: 20px; display: flex; justify-content: center; }
+.label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 5mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; font-family: Arial, sans-serif; color: #000; }
+.label-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+.label-paciente { font-size: 16px; font-weight: bold; margin-bottom: 8px; line-height: 1.2; }
+.label-refeicao { font-size: 18px; font-weight: bold; margin-bottom: 6px; text-transform: uppercase; }
+.label-dieta { font-size: 16px; font-weight: bold; }
 
 /* Toasts */
-#toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; z-index: 100; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-.toast { 
-  background: var(--ink); 
-  color: #fff; 
-  border-radius: 10px; 
-  padding: 14px 24px; 
-  font-size: 15px; 
-  font-weight: 600; 
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); 
-  animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-@keyframes toastIn { from { transform: translateY(20px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+#toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 99; display: grid; gap: 8px; pointer-events: none; }
+.toast { background: var(--ink); color: #fff; border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: up .2s ease-out; }
 .toast.success { background: var(--pri); }
-.toast.error { background: var(--danger); }
+.toast.error { background: #b3402e; }
 
-.loader { text-align: center; padding: 60px 20px; color: var(--mut); font-weight: 500; font-size: 16px; }
+.loader { text-align: center; padding: 40px; color: var(--mut); font-weight: 500; }
+.edit-btn { background: none; border: none; color: var(--pri); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; margin-top: 6px; }
 
 /* Print Styles */
 @media print {
   @page { size: 104mm 56mm; margin: 0; }
   body * { visibility: hidden; }
   .label-preview, .label-preview * { visibility: visible; }
-  .label-preview { 
-    position: absolute; 
-    left: 0; 
-    top: 0; 
-    width: 104mm; 
-    height: 56mm; 
-    border: none !important; 
-    box-shadow: none !important; 
-    padding: 4mm 6mm !important; 
-    margin: 0 !important; 
-    background: #fff !important; 
-    justify-content: center; 
-    border-radius: 0 !important;
-  }
-  .label-header { font-size: 12pt; margin-bottom: 6pt; border-bottom: 2pt solid #000; padding-bottom: 4pt; }
-  .label-paciente { font-size: 14pt; margin-bottom: 6pt; line-height: 1.2; }
-  .label-refeicao { font-size: 16pt; margin-bottom: 4pt; background: #000 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .label-dieta { font-size: 14pt; border: 1pt dashed #000 !important; }
+  .label-preview { position: absolute; left: 0; top: 0; width: 104mm; height: 56mm; border: none; box-shadow: none; padding: 3mm 5mm; margin: 0; background: transparent; justify-content: center; }
+  .label-header { font-size: 12pt; margin-bottom: 6pt; }
+  .label-paciente { font-size: 14pt; margin-bottom: 6pt; }
+  .label-refeicao { font-size: 16pt; margin-bottom: 4pt; }
+  .label-dieta { font-size: 14pt; }
 }
-
-/* Scrollbar styling */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 </head>
 <body>
@@ -409,21 +119,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
   <div class="in">
     <a class="brand" href="#">
       <span class="dot">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </span>
-      <div>
-        <b>Casa da Gestante</b>
-        <small>Controle de Dietas</small>
-      </div>
+      <span><b>Casa da Gestante</b><small>Controle de Dietas</small></span>
     </a>
     <div class="top-actions">
       <select id="date-select" class="date-selector" onchange="onDateChange()">
         <option value="">Carregando datas...</option>
       </select>
-      <button class="btn primary" onclick="openFormModal()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Adicionar Paciente
-      </button>
+      <button class="btn primary" onclick="openFormModal()">+ Adicionar Paciente</button>
     </div>
   </div>
 </header>
@@ -460,10 +164,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
 <!-- Modal de Impressão -->
 <div class="overlay" id="modal-print">
-  <div class="modal" style="max-width: 500px;">
+  <div class="modal" style="max-width: 450px;">
     <div class="modal-header">
-      <h3>Visualização da Etiqueta</h3>
-      <button class="xbtn" onclick="closeModal('modal-print')" aria-label="Fechar">×</button>
+      <h3>Imprimir Etiqueta</h3>
+      <button class="xbtn" onclick="closeModal('modal-print')">×</button>
     </div>
     <div class="label-preview-wrapper">
       <div class="label-preview" id="print-area">
@@ -478,10 +182,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-print')">Cancelar</button>
-      <button class="btn primary" onclick="window.print()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        Imprimir Etiqueta
-      </button>
+      <button class="btn primary" onclick="window.print()">Imprimir Etiqueta</button>
     </div>
   </div>
 </div>
@@ -491,7 +192,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
   <div class="modal">
     <div class="modal-header">
       <h3 id="form-title">Adicionar Paciente</h3>
-      <button class="xbtn" onclick="closeModal('modal-form')" aria-label="Fechar">×</button>
+      <button class="xbtn" onclick="closeModal('modal-form')">×</button>
     </div>
     <div class="modal-body">
       <form id="paciente-form" onsubmit="salvarPacienteForm(event)">
@@ -511,49 +212,42 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
           </div>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 12px; margin: 24px 0 16px;">
-          <div style="flex: 1; height: 1px; background: var(--line);"></div>
-          <span style="font-weight:700; color: var(--mut); font-size:12px; letter-spacing: 0.05em; text-transform:uppercase;">Refeições do Dia</span>
-          <div style="flex: 1; height: 1px; background: var(--line);"></div>
-        </div>
+        <hr style="border:0; border-top:1px solid var(--line); margin: 15px 0;">
+        <p style="font-weight:600; margin-bottom: 10px; color: var(--mut); font-size:12px; text-transform:uppercase;">Refeições do Dia</p>
 
-        <div class="grid2">
-          <div class="field">
-            <label>Desjejum (6h)</label>
-            <input type="text" id="f-desjejum" placeholder="Detalhes da refeição">
-          </div>
-          <div class="field">
-            <label>Colação (9h)</label>
-            <input type="text" id="f-colacao" placeholder="Detalhes da refeição">
-          </div>
-          <div class="field">
-            <label>Almoço (12h)</label>
-            <input type="text" id="f-almoco" placeholder="Detalhes da refeição">
-          </div>
-          <div class="field">
-            <label>Lanche (15h)</label>
-            <input type="text" id="f-lanche" placeholder="Detalhes da refeição">
-          </div>
-          <div class="field">
-            <label>Jantar (18h)</label>
-            <input type="text" id="f-jantar" placeholder="Detalhes da refeição">
-          </div>
-          <div class="field">
-            <label>Ceia (21h)</label>
-            <input type="text" id="f-ceia" placeholder="Detalhes da refeição">
-          </div>
+        <div class="field">
+          <label>Desjejum (6h)</label>
+          <input type="text" id="f-desjejum" placeholder="Detalhes do desjejum">
+        </div>
+        <div class="field">
+          <label>Colação (9h)</label>
+          <input type="text" id="f-colacao" placeholder="Detalhes da colação">
+        </div>
+        <div class="field">
+          <label>Almoço (12h)</label>
+          <input type="text" id="f-almoco" placeholder="Detalhes do almoço">
+        </div>
+        <div class="field">
+          <label>Lanche (15h)</label>
+          <input type="text" id="f-lanche" placeholder="Detalhes do lanche">
+        </div>
+        <div class="field">
+          <label>Jantar (18h)</label>
+          <input type="text" id="f-jantar" placeholder="Detalhes do jantar">
+        </div>
+        <div class="field">
+          <label>Ceia (21h)</label>
+          <input type="text" id="f-ceia" placeholder="Detalhes da ceia">
         </div>
         <div class="field">
           <label>Observação</label>
-          <textarea id="f-obs" placeholder="Observações adicionais (opcional)" style="min-height:80px; resize: vertical;"></textarea>
+          <textarea id="f-obs" placeholder="Observações adicionais (opcional)" style="min-height:60px"></textarea>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn" onclick="closeModal('modal-form')">Cancelar</button>
-      <button type="submit" form="paciente-form" class="btn primary" id="btn-salvar">
-        Salvar Paciente
-      </button>
+      <button type="submit" form="paciente-form" class="btn primary" id="btn-salvar">Salvar Paciente</button>
     </div>
   </div>
 </div>
@@ -562,6 +256,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
   let dataPacientes = [];
   let currentDate = "";
 
+  // Helper para hoje
   function getDataAtual() {
     const data = new Date();
     const dia = String(data.getDate()).padStart(2, '0');
@@ -570,35 +265,19 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
     return `${dia}/${mes}/${ano}`;
   }
 
+  // Toasts
   function showToast(msg, type='success') {
     const c = document.getElementById('toasts');
     const t = document.createElement('div');
     t.className = `toast ${type}`;
-    
-    let icon = type === 'success' 
-      ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-      : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
-      
-    t.innerHTML = `${icon} <span>${msg}</span>`;
+    t.innerText = msg;
     c.appendChild(t);
-    setTimeout(() => { 
-      t.style.opacity = '0'; 
-      t.style.transform = 'translateY(10px) scale(0.95)';
-      setTimeout(() => t.remove(), 300); 
-    }, 4000);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 3000);
   }
 
+  // Init
   document.addEventListener("DOMContentLoaded", () => {
     loadDates();
-    
-    // Close modal on overlay click
-    document.querySelectorAll('.overlay').forEach(overlay => {
-      overlay.addEventListener('mousedown', (e) => {
-        if (e.target === overlay) {
-          closeModal(overlay.id);
-        }
-      });
-    });
   });
 
   function loadDates() {
@@ -613,9 +292,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
     const sel = document.getElementById("date-select");
     sel.innerHTML = "";
     
+    // Garantir que a data atual está na lista, se não, adiciona
     const hoje = getDataAtual();
     if (!dates.includes(hoje)) dates.push(hoje);
     
+    // Sort basic (assume formato dd/mm/yyyy) - simplify to just populate
     dates.forEach(d => {
       const opt = document.createElement("option");
       opt.value = d;
@@ -663,18 +344,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
       tdInfo.innerHTML = `
         <div class="paciente-nome">${p.prontuario_nome}</div>
         <div class="paciente-diag">${p.diagnostico}</div>
-        <button class="edit-btn" onclick="openFormModal(${index})">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          Editar paciente
-        </button>
+        <button class="edit-btn" onclick="openFormModal(${index})">Editar paciente</button>
       `;
       
       const tdDieta = document.createElement("td");
       tdDieta.innerHTML = `<span class="dieta-badge">${p.dieta}</span>`;
 
       const renderMealBtn = (mealVal, mealName) => {
-        if (!mealVal) return '<span style="color:var(--line); padding: 8px 12px; display:block;">—</span>';
-        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')" title="Imprimir etiqueta: ${mealVal}">${mealVal}</button>`;
+        if (!mealVal) return '-';
+        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')">${mealVal}</button>`;
       };
 
       tr.appendChild(tdInfo);
@@ -706,7 +384,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
     document.getElementById("modal-print").classList.add("open");
   }
 
-  // === Modal Form ===
+  // === Modal Form (Adicionar/Editar) ===
   function openFormModal(index = null) {
     const form = document.getElementById("paciente-form");
     form.reset();
@@ -731,18 +409,13 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
     }
 
     document.getElementById("modal-form").classList.add("open");
-    setTimeout(() => {
-      document.getElementById("f-nome").focus();
-    }, 100);
   }
 
   function salvarPacienteForm(e) {
     e.preventDefault();
     const btn = document.getElementById("btn-salvar");
-    const originalText = btn.innerHTML;
-    
     btn.disabled = true;
-    btn.innerHTML = `<svg class="spin" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Salvando...`;
+    btn.innerText = "Salvando...";
 
     const paciente = {
       id: document.getElementById("f-id").value,
@@ -761,11 +434,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
     if (typeof google !== 'undefined') {
       google.script.run.withSuccessHandler((res) => {
         btn.disabled = false;
-        btn.innerHTML = originalText;
+        btn.innerText = "Salvar Paciente";
         if (res.success) {
           showToast("Paciente salvo com sucesso!");
           closeModal("modal-form");
-          onDateChange(); 
+          onDateChange(); // Recarrega a lista do dia
         } else {
           showToast("Erro ao salvar: " + res.error, "error");
         }
@@ -773,7 +446,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
     } else {
       setTimeout(() => {
         btn.disabled = false;
-        btn.innerHTML = originalText;
+        btn.innerText = "Salvar Paciente";
         showToast("Salvo localmente (modo Dev)!");
         closeModal("modal-form");
       }, 800);
@@ -785,10 +458,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
   }
 
 </script>
-
-<style>
-@keyframes spin { 100% { transform: rotate(360deg); } }
-</style>
 
 </body>
 </html>
