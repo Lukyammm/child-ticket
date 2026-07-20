@@ -133,7 +133,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .chip.on { background: var(--pri); border-color: var(--pri); color: #fff; transform: scale(1.03); }
 .chip-empty { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
 .chip-noresult { font-size: 12px; color: var(--mut); font-style: italic; padding: 4px 0; }
-.chip-texto-extra { margin-bottom: 0; margin-top: 4px; }
+.chip-custom { background: var(--pri); border-color: var(--pri); color: #fff; }
+.chip-texto-row { display: flex; gap: 6px; margin-top: 4px; }
+.chip-texto-extra { margin-bottom: 0; flex: 1; }
+.chip-texto-add { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 8px; width: 34px; font-size: 16px; font-weight: 700; cursor: pointer; transition: .15s; }
+.chip-texto-add:hover { border-color: var(--pri); color: var(--pri-d); }
 
 /* Painel de Administração */
 .admin-panel-desc { font-size: 13px; color: var(--mut); margin-bottom: 18px; line-height: 1.5; }
@@ -833,25 +837,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     sel.value = atual;
   }
 
-  // === Chips de seleção múltipla + texto livre ===
+  // === Chips de seleção múltipla + texto livre (cada texto digitado também vira um chip) ===
   function parseMealValue(value) {
-    if (!value) return { chips: [], texto: '' };
-    const partes = value.split('+').map(s => s.trim()).filter(Boolean);
-    const chips = [];
-    const resto = [];
-    partes.forEach(parte => {
-      const match = catalogoItens.find(item => item.trim().toLowerCase() === parte.toLowerCase());
-      if (match && chips.indexOf(match) === -1) chips.push(match);
-      else resto.push(parte);
-    });
-    return { chips, texto: resto.join(' + ') };
+    if (!value) return { chips: [] };
+    const chips = value.split('+').map(s => s.trim()).filter(Boolean);
+    return { chips };
   }
 
   function combineMealValue(field) {
-    const state = mealFormState[field];
-    const partes = [...state.chips];
-    if (state.texto && state.texto.trim()) partes.push(state.texto.trim());
-    return partes.join(' + ');
+    return mealFormState[field].chips.join(' + ');
   }
 
   function toggleChip(field, item) {
@@ -859,6 +853,19 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const i = state.chips.indexOf(item);
     if (i > -1) state.chips.splice(i, 1); else state.chips.push(item);
     renderMealFields();
+  }
+
+  // Confirma o texto digitado no campo livre, transformando-o em um chip
+  // removível (igual aos itens do catálogo), e limpa o campo de digitação.
+  function confirmarTextoExtra(field) {
+    const state = mealFormState[field];
+    const texto = (state.textoDraft || '').trim();
+    if (!texto) return;
+    state.textoDraft = '';
+    if (state.chips.indexOf(texto) === -1) state.chips.push(texto);
+    renderMealFields();
+    const input = document.getElementById('f-' + field + '-texto');
+    if (input) input.focus();
   }
 
   function toggleMealGroup(field) {
@@ -874,7 +881,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     container.innerHTML = '';
 
     MEAL_CATEGORIES.forEach(cat => {
-      const state = mealFormState[cat.field] || { chips: [], texto: '' };
+      const state = mealFormState[cat.field] || { chips: [], textoDraft: '' };
       // Sempre começa fechado, mesmo com itens já selecionados (ex: ao editar um
       // paciente com as 6 refeições preenchidas). Abrir tudo de uma vez mostra 6
       // caixas de busca + 6 paredes de chips simultaneamente — poluição visual
@@ -894,7 +901,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       labelSpan.textContent = cat.label;
       header.appendChild(labelSpan);
 
-      const selectedCount = state.chips.length + (state.texto && state.texto.trim() ? 1 : 0);
+      const selectedCount = state.chips.length;
       if (selectedCount > 0) {
         const countSpan = document.createElement('span');
         countSpan.className = 'mg-count';
@@ -917,11 +924,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         body.className = 'meal-group-body';
 
         const itens = catalogoItens;
+        // Chips digitados manualmente (não fazem parte do catálogo padrão) ficam
+        // sempre visíveis no topo, com um "x" para remover — mesmo comportamento
+        // dos itens do catálogo, só que destacados por não terem vindo de lá.
+        const customSelecionados = state.chips.filter(c => !itens.includes(c));
 
-        if (itens.length === 0) {
+        if (itens.length === 0 && customSelecionados.length === 0) {
           const vazio = document.createElement('span');
           vazio.className = 'chip-empty';
-          vazio.textContent = 'Nenhum item cadastrado ainda. Cadastre pelo ícone de cadeado no topo da página.';
+          vazio.textContent = 'Nenhum item cadastrado ainda. Cadastre pelo ícone de cadeado no topo da página, ou digite algo abaixo.';
           body.appendChild(vazio);
         } else {
           if (itens.length > 8) {
@@ -946,7 +957,17 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
           const filtro = state.search.trim().toLowerCase();
           const itensFiltrados = filtro ? itens.filter(item => item.toLowerCase().includes(filtro)) : itens;
 
-          if (itensFiltrados.length === 0) {
+          customSelecionados.forEach(item => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chip on chip-custom';
+            btn.title = 'Clique para remover';
+            btn.textContent = item + ' ×';
+            btn.onclick = () => toggleChip(cat.field, item);
+            chipsDiv.appendChild(btn);
+          });
+
+          if (itensFiltrados.length === 0 && customSelecionados.length === 0) {
             const nores = document.createElement('span');
             nores.className = 'chip-noresult';
             nores.textContent = 'Nenhum item encontrado.';
@@ -964,14 +985,33 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
           body.appendChild(chipsDiv);
         }
 
+        const textoRow = document.createElement('div');
+        textoRow.className = 'chip-texto-row';
+
         const input = document.createElement('input');
         input.type = 'text';
         input.id = 'f-' + cat.field + '-texto';
         input.className = 'chip-search chip-texto-extra';
-        input.placeholder = 'Digite algo adicional (opcional)';
-        input.value = state.texto;
-        input.oninput = (e) => { mealFormState[cat.field].texto = e.target.value; };
-        body.appendChild(input);
+        input.placeholder = 'Digite algo e aperte Enter para adicionar';
+        input.value = state.textoDraft || '';
+        input.oninput = (e) => { mealFormState[cat.field].textoDraft = e.target.value; };
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); confirmarTextoExtra(cat.field); }
+        };
+        input.onblur = () => confirmarTextoExtra(cat.field);
+        textoRow.appendChild(input);
+
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'chip-texto-add';
+        addBtn.title = 'Adicionar';
+        addBtn.textContent = '+';
+        // onmousedown (em vez de onclick) dispara antes do blur do input,
+        // então o texto é confirmado mesmo com o clique tirando o foco.
+        addBtn.onmousedown = (e) => { e.preventDefault(); confirmarTextoExtra(cat.field); };
+        textoRow.appendChild(addBtn);
+
+        body.appendChild(textoRow);
 
         group.appendChild(body);
       }
@@ -987,7 +1027,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     document.getElementById("f-id").value = "";
 
     mealFormState = {};
-    MEAL_CATEGORIES.forEach(cat => { mealFormState[cat.field] = { chips: [], texto: '' }; });
+    MEAL_CATEGORIES.forEach(cat => { mealFormState[cat.field] = { chips: [], textoDraft: '' }; });
 
     const btnAlta = document.getElementById("btn-alta");
     if (index !== null) {
