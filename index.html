@@ -9,14 +9,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink: #1d2a24;
-  --paper: #f4f6f3;
+  --ink: #2a1d24;
+  --paper: #f9f4f6;
   --card: #ffffff;
-  --line: #e0e6e0;
-  --mut: #68766e;
-  --pri: #0e7a5f;
-  --pri-d: #0a5a46;
-  --pri-s: #e3f0ea;
+  --line: #ecdfe4;
+  --mut: #7a6670;
+  --pri: #c2255c;
+  --pri-d: #99194a;
+  --pri-s: #fbe6ee;
   --r: 12px;
   --sh: 0 1px 2px rgba(29,42,36,.06), 0 4px 14px rgba(29,42,36,.05);
   --sh-lift: 0 6px 16px rgba(29,42,36,.10), 0 2px 5px rgba(29,42,36,.06);
@@ -24,13 +24,13 @@
 }
 
 body.theme-onco {
-  --ink: #2a1d24;
-  --paper: #f9f4f6;
-  --line: #ecdfe4;
-  --mut: #7a6670;
-  --pri: #c2255c;
-  --pri-d: #99194a;
-  --pri-s: #fbe6ee;
+  --ink: #1d2a24;
+  --paper: #f4f6f3;
+  --line: #e0e6e0;
+  --mut: #68766e;
+  --pri: #0e7a5f;
+  --pri-d: #0a5a46;
+  --pri-s: #e3f0ea;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -712,8 +712,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   // sem acesso às custom properties --pri/--pri-d da página principal).
   function getCoresPerfil() {
     return currentPerfil === 'ONCOLOGICO'
-      ? { pri: '#c2255c', priD: '#99194a' }
-      : { pri: '#0e7a5f', priD: '#0a5a46' };
+      ? { pri: '#0e7a5f', priD: '#0a5a46' }
+      : { pri: '#c2255c', priD: '#99194a' };
   }
 
   // Monta o HTML interno de uma etiqueta (o conteúdo do .label-preview) para um
