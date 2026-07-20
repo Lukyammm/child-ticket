@@ -243,7 +243,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     <div class="label-preview-wrapper">
       <div class="label-preview" id="print-area">
         <div class="label-header">
-          <span>Casa da Gestante</span>
+          <span id="lbl-setor">Casa da Gestante</span>
           <span id="lbl-data"></span>
         </div>
         <div class="label-paciente" id="lbl-paciente"></div>
@@ -363,6 +363,17 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
   const SPINNER_SVG = '<svg class="spinner" viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="40 100"/></svg>';
 
+  // Escapa texto para inserção segura em HTML (evita quebra de layout / injeção
+  // caso um nome ou item contenha caracteres como < > & " ').
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // Helper para hoje
   function getDataAtual() {
     const data = new Date();
@@ -438,6 +449,13 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     }
   }
 
+  // Converte "dd/mm/yyyy" em Date para ordenação. Retorna null se não bater o formato.
+  function parseDataBR(str) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((str || '').trim());
+    if (!m) return null;
+    return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  }
+
   function renderDates(dates) {
     const sel = document.getElementById("date-select");
     sel.innerHTML = "";
@@ -446,7 +464,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const hoje = getDataAtual();
     if (!dates.includes(hoje)) dates.push(hoje);
 
-    // Sort basic (assume formato dd/mm/yyyy) - simplify to just populate
+    // Ordena por data (mais recente primeiro); datas em formato inesperado vão para o fim.
+    dates.sort((a, b) => {
+      const da = parseDataBR(a), db = parseDataBR(b);
+      if (da && db) return db - da;
+      if (da) return -1;
+      if (db) return 1;
+      return a.localeCompare(b);
+    });
+
     dates.forEach(d => {
       const opt = document.createElement("option");
       opt.value = d;
@@ -455,6 +481,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     });
 
     sel.value = hoje;
+    // Setar .value por código NÃO dispara o evento onchange, então precisamos
+    // carregar os pacientes do dia manualmente aqui. Sem isto, a tabela nunca
+    // puxa os dados da planilha ao abrir a página ou ao trocar de perfil.
+    onDateChange();
   }
 
   function onDateChange() {
@@ -498,17 +528,17 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
       const tdInfo = document.createElement("td");
       tdInfo.innerHTML = `
-        <div class="paciente-nome">${p.prontuario_nome}</div>
-        <div class="paciente-diag">${p.diagnostico}</div>
+        <div class="paciente-nome">${escapeHtml(p.prontuario_nome)}</div>
+        <div class="paciente-diag">${escapeHtml(p.diagnostico)}</div>
         <button class="edit-btn" onclick="openFormModal(${index})">Editar paciente</button>
       `;
 
       const tdDieta = document.createElement("td");
-      tdDieta.innerHTML = `<span class="dieta-badge">${p.dieta}</span>`;
+      tdDieta.innerHTML = `<span class="dieta-badge">${escapeHtml(p.dieta)}</span>`;
 
       const renderMealBtn = (mealVal, mealName) => {
         if (!mealVal) return '-';
-        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')">${mealVal}</button>`;
+        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')">${escapeHtml(mealVal)}</button>`;
       };
 
       tr.appendChild(tdInfo);
@@ -520,7 +550,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         <td>${renderMealBtn(p.lanche, 'Lanche 15H')}</td>
         <td>${renderMealBtn(p.jantar, 'Jantar 18H')}</td>
         <td>${renderMealBtn(p.ceia, 'Ceia 21H')}</td>
-        <td>${p.observacao ? p.observacao : '-'}</td>
+        <td>${p.observacao ? escapeHtml(p.observacao) : '-'}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -529,6 +559,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   // === Modal Print ===
   function openPrintModal(index, mealName) {
     const p = dataPacientes[index];
+    document.getElementById("lbl-setor").innerText = currentPerfil === 'ONCOLOGICO' ? 'Setor Oncológico' : 'Casa da Gestante';
     document.getElementById("lbl-data").innerText = currentDate;
     const pacienteStr = p.prontuario_nome.includes("-")
       ? `Paciente: ${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}`
