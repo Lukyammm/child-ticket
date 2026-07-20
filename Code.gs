@@ -15,34 +15,27 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// Executado automaticamente pelo Google Sheets sempre que a planilha é aberta.
-// Aproveita esse momento (onde SpreadsheetApp.getActiveSpreadsheet() funciona)
-// para guardar o ID da planilha, já que ao rodar como Web App (doGet) não existe
-// "planilha ativa" mesmo quando o script está vinculado a ela.
+// Guarda o ID da planilha sempre que o script tem uma planilha ativa disponível
+// (menus, onOpen, execução manual pelo editor). Serve de apoio para o caso raro
+// de getActiveSpreadsheet() não estar disponível no contexto atual do Web App.
 function onOpen() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (ss) {
-    PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
-  }
+  getSpreadsheet_();
 }
 
-// Retorna a planilha onde o script está vinculado (a mesma em que foi colado e executado)
+// Retorna a planilha onde o script está vinculado (a mesma em que foi colado)
 function getSpreadsheet_() {
-  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-  if (id) {
-    return SpreadsheetApp.openById(id);
-  }
-
-  // Fallback: caso ainda não exista ID salvo (script nunca aberto pela UI do
-  // Sheets), tenta pegar a planilha ativa - funciona em contextos que não são
-  // Web App (ex: executando uma função manualmente pelo editor de script).
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   if (ss) {
     PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
     return ss;
   }
 
-  throw new Error('Não foi possível identificar a planilha. Abra a planilha onde este script está vinculado ao menos uma vez pelo Google Sheets antes de acessar o link do sistema.');
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (id) {
+    return SpreadsheetApp.openById(id);
+  }
+
+  throw new Error('Não foi possível identificar a planilha. Verifique se este script foi adicionado pela própria planilha em Extensões > Apps Script.');
 }
 
 // Resolve o nome real da aba na planilha para o perfil e data informados
