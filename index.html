@@ -68,6 +68,8 @@ body { font-family: var(--body); background: var(--paper); color: var(--ink); fo
 .btn.primary { background: var(--pri); color: #fff; border-color: var(--pri); }
 .btn.primary:hover { background: var(--pri-d); box-shadow: 0 4px 12px rgba(14,122,95,0.3); transform: translateY(-2px); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn.btn-danger { color: #b3402e; border-color: #e9c4bd; }
+.btn.btn-danger:hover { background: #fbe9e6; border-color: #b3402e; }
 
 /* Layout & Table */
 main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
@@ -197,7 +199,13 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       <select id="date-select" class="date-selector" onchange="onDateChange()">
         <option value="">Carregando datas...</option>
       </select>
+      <button class="btn" title="Escolher outro dia (ex: preparar o de amanhã)" onclick="abrirNovoDia()">+ Novo dia</button>
+      <input type="date" id="novo-dia-input" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none" onchange="onNovoDiaEscolhido()" tabindex="-1" aria-hidden="true">
       <button class="btn primary" onclick="openFormModal()">+ Adicionar Paciente</button>
+      <button class="btn" title="Imprimir várias etiquetas de uma vez" onclick="abrirImpressaoLote()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir em lote
+      </button>
       <button class="lockbtn" title="Área de administração" onclick="abrirLoginAdmin()">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </button>
@@ -266,6 +274,27 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   </div>
 </div>
 
+<!-- Modal de Impressão em Lote -->
+<div class="overlay" id="modal-lote">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-header">
+      <h3>Imprimir em lote</h3>
+      <button class="xbtn" onclick="closeModal('modal-lote')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px; color:var(--mut); margin-bottom:16px; line-height:1.5;">
+        Data: <b id="lote-data-label"></b>. Marque as refeições que quer imprimir — o sistema gera uma etiqueta para cada paciente que tiver aquela refeição preenchida.
+      </p>
+      <div id="lote-meals" class="chips"></div>
+      <p id="lote-resumo" style="font-size:12.5px; color:var(--mut); margin-top:14px;"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeModal('modal-lote')">Cancelar</button>
+      <button type="button" class="btn primary" id="btn-lote-imprimir" onclick="imprimirLote()">Imprimir selecionadas</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de Formulário -->
 <div class="overlay" id="modal-form">
   <div class="modal">
@@ -304,6 +333,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       </form>
     </div>
     <div class="modal-footer">
+      <button type="button" class="btn btn-danger" id="btn-alta" style="margin-right:auto; display:none" onclick="darAltaPaciente()">Dar alta</button>
       <button type="button" class="btn" onclick="closeModal('modal-form')">Cancelar</button>
       <button type="submit" form="paciente-form" class="btn primary" id="btn-salvar">Salvar Paciente</button>
     </div>
@@ -572,50 +602,41 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       : { pri: '#0e7a5f', priD: '#0a5a46' };
   }
 
-  // === Modal Print ===
-  function openPrintModal(index, field) {
-    const p = dataPacientes[index];
-    const cat = MEAL_CATEGORIES.find(c => c.field === field);
-    const itemTexto = p[field];
-    if (!cat || !itemTexto) return;
-
-    document.getElementById("lbl-setor").innerText = currentPerfil === 'ONCOLOGICO' ? 'Setor Oncológico' : 'Casa da Gestante';
-    document.getElementById("lbl-data").innerText = currentDate;
+  // Monta o HTML interno de uma etiqueta (o conteúdo do .label-preview) para um
+  // paciente e uma refeição. Usado tanto no preview em tela quanto na impressão
+  // única e em lote, garantindo que os três fiquem sempre idênticos.
+  // A data é rotulada como "SERVIR" — é o dia em que a refeição será consumida,
+  // o que evita a confusão de "comida vencida" ao imprimir hoje a refeição de amanhã.
+  function buildLabelInner(p, cat) {
+    const setor = currentPerfil === 'ONCOLOGICO' ? 'Setor Oncológico' : 'Casa da Gestante';
     const pacienteStr = p.prontuario_nome.includes("-")
       ? `${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}`
       : p.prontuario_nome;
-
-    document.getElementById("lbl-paciente").innerText = pacienteStr;
-    document.getElementById("lbl-diag").innerText = p.diagnostico || '';
-    document.getElementById("lbl-refeicao").innerText = cat.printName;
-    document.getElementById("lbl-dieta").innerText = p.dieta.toUpperCase();
-    document.getElementById("lbl-item").innerText = itemTexto;
-    document.getElementById("lbl-obs").innerText = p.observacao ? ('Obs: ' + p.observacao) : '';
-
-    showToast("Etiqueta pronta para impressão");
-    document.getElementById("modal-print").classList.add("open");
+    const obs = p.observacao ? ('Obs: ' + p.observacao) : '';
+    return `
+        <div class="label-top">
+          <span>${escapeHtml(setor)}</span>
+          <span>SERVIR ${escapeHtml(currentDate)}</span>
+        </div>
+        <div class="label-paciente">${escapeHtml(pacienteStr)}</div>
+        <div class="label-diag">${escapeHtml(p.diagnostico || '')}</div>
+        <div class="label-refeicao-row">
+          <span class="label-refeicao">${escapeHtml(cat.printName)}</span>
+          <span class="label-dieta-tag">${escapeHtml((p.dieta || '').toUpperCase())}</span>
+        </div>
+        <div class="label-item">${escapeHtml(p[cat.field] || '')}</div>
+        <div class="label-obs">${escapeHtml(obs)}</div>`;
   }
 
-  // Impressão via nova janela: o app roda dentro de um iframe protegido pelo
-  // Google Apps Script, e window.print() chamado ali dentro é frequentemente
-  // bloqueado pelo navegador. Abrir uma janela própria contorna essa restrição.
-  function imprimirEtiqueta() {
-    const conteudo = document.getElementById("print-area").innerHTML;
-    const cores = getCoresPerfil();
-    const janela = window.open('', '_blank', 'width=480,height=380');
-
-    if (!janela) {
-      showToast("Permita pop-ups no navegador para imprimir a etiqueta", "error");
-      return;
-    }
-
-    janela.document.write(`<!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><title>Etiqueta</title>
-<style>
+  // CSS compartilhado das etiquetas na janela de impressão. `pageBreak` ativa a
+  // quebra de página por etiqueta (usado no lote).
+  function buildLabelCss(cores, pageBreak) {
+    return `
   @page { size: 104mm 56mm; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; color: #000; }
-  .label-preview { width: 104mm; height: 56mm; padding: 3mm 3mm 3mm 5.5mm; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .label-preview { width: 104mm; height: 56mm; padding: 3mm 3mm 3mm 5.5mm; position: relative; overflow: hidden; display: flex; flex-direction: column; ${pageBreak ? 'page-break-after: always;' : ''} }
+  .label-preview:last-child { page-break-after: auto; }
   .label-preview::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5mm; background: ${cores.pri}; }
   .label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #666; padding-bottom: 1.3mm; border-bottom: 0.35mm solid #e6e6e6; margin-bottom: 1.6mm; }
   .label-paciente { font-size: 10.5pt; font-weight: 800; line-height: 1.2; margin-bottom: 0.6mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -626,17 +647,159 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   .label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: ${cores.priD}; border: 0.3mm solid ${cores.pri}; border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
   .label-item { flex: 1; display: flex; align-items: center; font-size: 12.5pt; font-weight: 800; line-height: 1.22; overflow: hidden; }
   .label-obs { font-size: 7.3pt; font-style: italic; color: #666; padding-top: 1mm; margin-top: auto; border-top: 0.3mm dashed #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .label-obs:empty { display: none; border-top: none; padding-top: 0; }
-</style>
-</head><body><div class="label-preview">${conteudo}</div></body></html>`);
+  .label-obs:empty { display: none; border-top: none; padding-top: 0; }`;
+  }
+
+  // Abre uma janela nova com uma ou mais etiquetas e dispara a impressão.
+  // O app roda dentro de um iframe protegido pelo Apps Script, onde window.print()
+  // costuma ser bloqueado; abrir uma janela própria contorna essa restrição.
+  function imprimirEtiquetas(labelsInner) {
+    if (!labelsInner.length) {
+      showToast("Nenhuma etiqueta para imprimir", "error");
+      return;
+    }
+    const cores = getCoresPerfil();
+    const janela = window.open('', '_blank', 'width=480,height=420');
+    if (!janela) {
+      showToast("Permita pop-ups no navegador para imprimir", "error");
+      return;
+    }
+
+    const corpo = labelsInner.map(inner => `<div class="label-preview">${inner}</div>`).join('');
+    janela.document.write(`<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Etiquetas</title>
+<style>${buildLabelCss(cores, labelsInner.length > 1)}</style>
+</head><body>${corpo}</body></html>`);
     janela.document.close();
 
-    setTimeout(() => {
-      janela.focus();
-      janela.print();
-    }, 350);
-
+    setTimeout(() => { janela.focus(); janela.print(); }, 350);
     janela.onafterprint = () => janela.close();
+  }
+
+  // === Modal Print (etiqueta única) ===
+  let printAtual = null; // { p, cat } da etiqueta atualmente no preview
+
+  function openPrintModal(index, field) {
+    const p = dataPacientes[index];
+    const cat = MEAL_CATEGORIES.find(c => c.field === field);
+    if (!cat || !p[field]) return;
+
+    printAtual = { p, cat };
+    document.getElementById("print-area").innerHTML = buildLabelInner(p, cat);
+
+    showToast("Etiqueta pronta para impressão");
+    document.getElementById("modal-print").classList.add("open");
+  }
+
+  function imprimirEtiqueta() {
+    if (!printAtual) return;
+    imprimirEtiquetas([ buildLabelInner(printAtual.p, printAtual.cat) ]);
+  }
+
+  // === Impressão em lote ===
+  let loteMealsSelecionadas = {}; // field -> bool
+
+  function abrirImpressaoLote() {
+    if (!dataPacientes.length) {
+      showToast("Nenhum paciente nesta data para imprimir", "error");
+      return;
+    }
+    loteMealsSelecionadas = {};
+    document.getElementById("lote-data-label").innerText = currentDate;
+    renderLoteMeals();
+    document.getElementById("modal-lote").classList.add("open");
+  }
+
+  function renderLoteMeals() {
+    const cont = document.getElementById("lote-meals");
+    cont.innerHTML = "";
+    MEAL_CATEGORIES.forEach(cat => {
+      const qtd = dataPacientes.filter(p => p[cat.field]).length;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip" + (loteMealsSelecionadas[cat.field] ? " on" : "");
+      btn.textContent = `${cat.label} (${qtd})`;
+      btn.disabled = qtd === 0;
+      if (qtd === 0) btn.style.opacity = "0.4";
+      btn.onclick = () => {
+        loteMealsSelecionadas[cat.field] = !loteMealsSelecionadas[cat.field];
+        renderLoteMeals();
+      };
+      cont.appendChild(btn);
+    });
+    atualizarResumoLote();
+  }
+
+  function contarEtiquetasLote() {
+    let total = 0;
+    MEAL_CATEGORIES.forEach(cat => {
+      if (loteMealsSelecionadas[cat.field]) total += dataPacientes.filter(p => p[cat.field]).length;
+    });
+    return total;
+  }
+
+  function atualizarResumoLote() {
+    const total = contarEtiquetasLote();
+    document.getElementById("lote-resumo").innerText =
+      total === 0 ? "" : `${total} etiqueta${total === 1 ? '' : 's'} ser${total === 1 ? 'á' : 'ão'} impressa${total === 1 ? '' : 's'}.`;
+  }
+
+  function imprimirLote() {
+    const labels = [];
+    MEAL_CATEGORIES.forEach(cat => {
+      if (!loteMealsSelecionadas[cat.field]) return;
+      dataPacientes.forEach(p => {
+        if (p[cat.field]) labels.push(buildLabelInner(p, cat));
+      });
+    });
+    if (!labels.length) {
+      showToast("Marque ao menos uma refeição com pacientes", "error");
+      return;
+    }
+    closeModal("modal-lote");
+    imprimirEtiquetas(labels);
+  }
+
+  // === Novo dia (escolher uma data futura, ex: preparar o de amanhã) ===
+  function abrirNovoDia() {
+    const input = document.getElementById("novo-dia-input");
+    if (input.showPicker) { try { input.showPicker(); return; } catch(e) {} }
+    input.focus();
+    input.click();
+  }
+
+  function onNovoDiaEscolhido() {
+    const iso = document.getElementById("novo-dia-input").value; // yyyy-mm-dd
+    if (!iso) return;
+    const partes = iso.split('-');
+    const dataBR = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+    const sel = document.getElementById("date-select");
+    if (![...sel.options].some(o => o.value === dataBR)) {
+      const opt = document.createElement("option");
+      opt.value = dataBR;
+      opt.innerText = dataBR;
+      sel.appendChild(opt);
+      ordenarOpcoesData(sel);
+    }
+    sel.value = dataBR;
+    onDateChange();
+  }
+
+  // Reordena as opções do seletor de datas (mais recente primeiro).
+  function ordenarOpcoesData(sel) {
+    const opts = [...sel.options];
+    opts.sort((a, b) => {
+      const da = parseDataBR(a.value), db = parseDataBR(b.value);
+      if (da && db) return db - da;
+      if (da) return -1;
+      if (db) return 1;
+      return a.value.localeCompare(b.value);
+    });
+    const atual = sel.value;
+    sel.innerHTML = "";
+    opts.forEach(o => sel.appendChild(o));
+    sel.value = atual;
   }
 
   // === Chips de seleção múltipla + texto livre ===
@@ -722,6 +885,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     mealFormState = {};
     MEAL_CATEGORIES.forEach(cat => { mealFormState[cat.field] = { chips: [], texto: '' }; });
 
+    const btnAlta = document.getElementById("btn-alta");
     if (index !== null) {
       document.getElementById("form-title").innerText = "Editar Paciente";
       const p = dataPacientes[index];
@@ -734,12 +898,52 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       MEAL_CATEGORIES.forEach(cat => {
         mealFormState[cat.field] = parseMealValue(p[cat.field]);
       });
+      // Botão de alta só faz sentido ao editar um paciente já salvo (tem rowNumber).
+      btnAlta.style.display = p.rowNumber ? "" : "none";
+      altaAtual = { rowNumber: p.rowNumber, nome: p.prontuario_nome };
     } else {
       document.getElementById("form-title").innerText = "Adicionar Paciente";
+      btnAlta.style.display = "none";
+      altaAtual = null;
     }
 
     renderMealFields();
     document.getElementById("modal-form").classList.add("open");
+  }
+
+  // Dar alta = remover o paciente do dia atual (deixa de ser herdado nos próximos).
+  let altaAtual = null; // { rowNumber, nome }
+
+  function darAltaPaciente() {
+    if (!altaAtual || !altaAtual.rowNumber) return;
+    const nome = altaAtual.nome || 'este paciente';
+    if (!confirm(`Dar alta e remover ${nome} do dia ${currentDate}?\n\nEle deixará de aparecer nos próximos dias.`)) return;
+
+    const btn = document.getElementById("btn-alta");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Removendo...</span>';
+
+    const aoRemover = (res) => {
+      btn.disabled = false;
+      btn.innerHTML = 'Dar alta';
+      if (res && res.success) {
+        showToast("Paciente recebeu alta");
+        closeModal("modal-form");
+        onDateChange();
+      } else {
+        showToast("Erro ao dar alta: " + ((res && res.error) || ''), "error");
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoRemover).withFailureHandler(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'Dar alta';
+        showToast("Erro ao dar alta", "error");
+      }).removerPaciente(currentDate, altaAtual.rowNumber, currentPerfil);
+    } else {
+      setTimeout(() => aoRemover({ success: true }), 400);
+    }
   }
 
   function salvarPacienteForm(e) {

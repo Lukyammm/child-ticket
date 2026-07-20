@@ -38,9 +38,80 @@ function getSpreadsheet_() {
   throw new Error('Não foi possível identificar a planilha. Verifique se este script foi adicionado pela própria planilha em Extensões > Apps Script.');
 }
 
+// Cabeçalho padrão das abas de dia (mesma ordem usada em getPacientesPorData)
+const HEADER_ = [
+  "Prontuário / Paciente", "Diagnóstico", "Dieta",
+  "Desjejum - 6h", "Colação - 9h", "Almoço - 12h",
+  "Lanche - 15h", "Jantar - 18h", "Ceia - 21h", "Observação"
+];
+
 // Resolve o nome real da aba na planilha para o perfil e data informados
 function resolveSheetName_(perfil, dataStr) {
   return perfil === 'ONCOLOGICO' ? (PREFIXO_ONCOLOGICO + dataStr) : dataStr;
+}
+
+// Converte "dd/mm/yyyy" em Date (meia-noite local). Retorna null se não bater o formato.
+function parseDataBR_(str) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(str || '').trim());
+  if (!m) return null;
+  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+}
+
+// Entre as abas-data do perfil, encontra a data mais recente ESTRITAMENTE anterior
+// à data pedida. Retorna a string "dd/mm/yyyy" da aba anterior, ou null.
+function encontrarDiaAnterior_(ss, perfil, dataStr) {
+  const alvo = parseDataBR_(dataStr);
+  if (!alvo) return null;
+
+  const datasDisponiveis = getDatasDisponiveis(perfil); // já filtra por perfil e remove ITENS_DIETA
+  let melhor = null, melhorData = null;
+  datasDisponiveis.forEach(d => {
+    const dt = parseDataBR_(d);
+    if (dt && dt.getTime() < alvo.getTime() && (!melhorData || dt.getTime() > melhorData.getTime())) {
+      melhor = d;
+      melhorData = dt;
+    }
+  });
+  return melhor;
+}
+
+// Cria uma aba nova para `sheetName`, com cabeçalho e as linhas de pacientes fornecidas.
+function criarAbaComPacientes_(ss, sheetName, pacientes) {
+  const sheet = ss.insertSheet(sheetName);
+  sheet.appendRow(HEADER_);
+  if (pacientes && pacientes.length) {
+    const linhas = pacientes.map(p => [
+      p.prontuario_nome, p.diagnostico, p.dieta,
+      p.desjejum, p.colacao, p.almoco,
+      p.lanche, p.jantar, p.ceia, p.observacao
+    ]);
+    sheet.getRange(2, 1, linhas.length, HEADER_.length).setValues(linhas);
+  }
+  return sheet;
+}
+
+// Lê os pacientes de uma aba já existente (sem herança). Uso interno.
+function lerPacientesDaAba_(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const pacientes = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0] && !row[1]) continue; // Pula linhas vazias
+    pacientes.push({
+      rowNumber: i + 1,
+      prontuario_nome: row[0] || "",
+      diagnostico: row[1] || "",
+      dieta: row[2] || "",
+      desjejum: row[3] || "",
+      colacao: row[4] || "",
+      almoco: row[5] || "",
+      lanche: row[6] || "",
+      jantar: row[7] || "",
+      ceia: row[8] || "",
+      observacao: row[9] || ""
+    });
+  }
+  return pacientes;
 }
 
 // Retorna as abas (Dias) disponíveis na planilha para o perfil informado
@@ -62,39 +133,52 @@ function getDatasDisponiveis(perfil) {
   }
 }
 
-// Retorna os pacientes da aba especificada, para o perfil informado
+// Retorna os pacientes da aba da data/perfil informados.
+//
+// Herança automática: se a aba ainda não existe (ou só tem cabeçalho) e a data
+// pedida é hoje ou futura, o sistema copia os pacientes + dietas do último dia
+// registrado anterior para uma nova aba dessa data. Assim a rotina "a dieta se
+// repete" não exige redigitar todo mundo — basta ajustar as exceções.
+// Datas passadas nunca são preenchidas por herança (evita reescrever histórico).
 function getPacientesPorData(dataStr, perfil) {
   try {
     const ss = getSpreadsheet_();
-    const sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
-    if (!sheet) return [];
+    let sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
 
-    const data = sheet.getDataRange().getValues();
-    const pacientes = [];
-
-    // Assumindo que a linha 0 é o cabeçalho
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      if (!row[0] && !row[1]) continue; // Pula linhas vazias
-
-      pacientes.push({
-        rowNumber: i + 1, // Número real da linha na planilha (1-indexed)
-        prontuario_nome: row[0] || "",
-        diagnostico: row[1] || "",
-        dieta: row[2] || "",
-        desjejum: row[3] || "",
-        colacao: row[4] || "",
-        almoco: row[5] || "",
-        lanche: row[6] || "",
-        jantar: row[7] || "",
-        ceia: row[8] || "",
-        observacao: row[9] || ""
-      });
+    const vazia = !sheet || sheet.getLastRow() < 2;
+    if (vazia && dataEhHojeOuFutura_(dataStr)) {
+      const diaAnterior = encontrarDiaAnterior_(ss, perfil, dataStr);
+      if (diaAnterior) {
+        const anterior = ss.getSheetByName(resolveSheetName_(perfil, diaAnterior));
+        const herdados = anterior ? lerPacientesDaAba_(anterior) : [];
+        if (herdados.length && !sheet) {
+          sheet = criarAbaComPacientes_(ss, resolveSheetName_(perfil, dataStr), herdados);
+        } else if (herdados.length && sheet) {
+          // Aba existia mas só com cabeçalho: preenche as linhas herdadas.
+          const linhas = herdados.map(p => [
+            p.prontuario_nome, p.diagnostico, p.dieta,
+            p.desjejum, p.colacao, p.almoco,
+            p.lanche, p.jantar, p.ceia, p.observacao
+          ]);
+          sheet.getRange(2, 1, linhas.length, HEADER_.length).setValues(linhas);
+        }
+      }
     }
-    return pacientes;
+
+    if (!sheet) return [];
+    return lerPacientesDaAba_(sheet);
   } catch(e) {
     return [];
   }
+}
+
+// True se dataStr ("dd/mm/yyyy") é hoje ou uma data futura (comparação por dia).
+function dataEhHojeOuFutura_(dataStr) {
+  const d = parseDataBR_(dataStr);
+  if (!d) return false;
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  return d.getTime() >= hoje.getTime();
 }
 
 // Salva ou edita um paciente na aba da data especificada, para o perfil informado
@@ -107,11 +191,7 @@ function salvarPaciente(dataStr, paciente, perfil) {
     // Se a aba para esse dia não existir, cria uma nova com cabeçalho
     if (!sheet) {
       sheet = ss.insertSheet(sheetName);
-      sheet.appendRow([
-        "Prontuário / Paciente", "Diagnóstico", "Dieta",
-        "Desjejum - 6h", "Colação - 9h", "Almoço - 12h",
-        "Lanche - 15h", "Jantar - 18h", "Ceia - 21h", "Observação"
-      ]);
+      sheet.appendRow(HEADER_);
     }
 
     const rowData = [
@@ -138,6 +218,26 @@ function salvarPaciente(dataStr, paciente, perfil) {
       sheet.appendRow(rowData);
       return { success: true, rowNumber: newRowNumber };
     }
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// Remove (dá "alta") um paciente da aba da data/perfil informados, pelo rowNumber.
+// Necessário porque, com a herança automática entre dias, quem recebe alta precisa
+// deixar de ser copiado para os próximos dias.
+function removerPaciente(dataStr, rowNumber, perfil) {
+  try {
+    const ss = getSpreadsheet_();
+    const sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
+    if (!sheet) return { success: false, error: 'Aba não encontrada.' };
+
+    const linha = Number(rowNumber);
+    if (!linha || linha < 2 || linha > sheet.getLastRow()) {
+      return { success: false, error: 'Linha inválida.' };
+    }
+    sheet.deleteRow(linha);
+    return { success: true };
   } catch(e) {
     return { success: false, error: e.toString() };
   }
