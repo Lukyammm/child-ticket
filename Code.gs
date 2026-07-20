@@ -54,8 +54,7 @@ function getDatasDisponiveis(perfil) {
     // Gestante: abas que NÃO usam o prefixo Oncológico (mantém compatibilidade com abas antigas)
     return nomes.filter(n => n.indexOf(PREFIXO_ONCOLOGICO) !== 0 && n !== 'ITENS_DIETA');
   } catch(e) {
-    // Fallback mock em caso de erro inesperado
-    return ['17/07/2026', '18/07/2026'];
+    return [];
   }
 }
 
@@ -90,16 +89,7 @@ function getPacientesPorData(dataStr, perfil) {
     }
     return pacientes;
   } catch(e) {
-    // Retorna mock
-    if (perfil === 'ONCOLOGICO') {
-      return [
-        { rowNumber: 2, prontuario_nome: "40521 - Carlos Eduardo Menezes", diagnostico: "Oncológico", dieta: "Branda Hipercalórica", desjejum: "MINGAU DE AVEIA + FRUTA", colacao: "SUCO ADOÇADO", almoco: "BRANDA COM FRANGO DESFIADO", lanche: "VITAMINA HIPERCALÓRICA", jantar: "SOPA CREMOSA", ceia: "MINGAU + COMPLEMENTO", observacao: "" }
-      ];
-    }
-    return [
-      { rowNumber: 2, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
-      { rowNumber: 3, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
-    ];
+    return [];
   }
 }
 
@@ -182,8 +172,7 @@ function getItensDieta() {
     }
     return itens;
   } catch(e) {
-    // Fallback mock em caso de erro inesperado
-    return ['CAFÉ COMPLETO', 'CAFÉ COMPLETO DM', 'MINGAU DE AVEIA', 'SUCO', 'SUCO DM', 'VITAMINA', 'VITAMINA DM', 'GERAL', 'GERAL HAS DM', 'BRANDA', 'BISCOITO', 'MINGAU'];
+    return [];
   }
 }
 
