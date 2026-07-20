@@ -1,6 +1,4 @@
 // Google Apps Script - Casa da Gestante / Oncológico
-// SPREADSHEET_ID: Insira o ID real da sua planilha aqui.
-const SPREADSHEET_ID = 'SUBSTITUA_PELO_ID_DA_PLANILHA';
 
 // Senha da área de administração (cadastro de itens de dieta).
 // ALTERE esta senha antes de usar em produção.
@@ -19,6 +17,25 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+// Planilha de dados: criada automaticamente no primeiro uso e o ID fica salvo
+// nas Propriedades do Script. Não é necessário configurar nenhum ID manualmente.
+function getSpreadsheet_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('SPREADSHEET_ID');
+
+  if (id) {
+    try {
+      return SpreadsheetApp.openById(id);
+    } catch (e) {
+      // ID salvo não é mais válido (planilha excluída/movida) - recria abaixo
+    }
+  }
+
+  const ss = SpreadsheetApp.create('Casa da Gestante - Dados');
+  props.setProperty('SPREADSHEET_ID', ss.getId());
+  return ss;
+}
+
 // Resolve o nome real da aba na planilha para o perfil e data informados
 function resolveSheetName_(perfil, dataStr) {
   return perfil === 'ONCOLOGICO' ? (PREFIXO_ONCOLOGICO + dataStr) : dataStr;
@@ -27,7 +44,7 @@ function resolveSheetName_(perfil, dataStr) {
 // Retorna as abas (Dias) disponíveis na planilha para o perfil informado
 function getDatasDisponiveis(perfil) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet_();
     const sheets = ss.getSheets();
     const nomes = sheets.map(s => s.getName());
 
@@ -39,7 +56,7 @@ function getDatasDisponiveis(perfil) {
     // Gestante: abas que NÃO usam o prefixo Oncológico (mantém compatibilidade com abas antigas)
     return nomes.filter(n => n.indexOf(PREFIXO_ONCOLOGICO) !== 0 && n !== 'ITENS_DIETA');
   } catch(e) {
-    // Fallback Mock para testes sem ID da planilha
+    // Fallback mock em caso de erro inesperado
     return ['17/07/2026', '18/07/2026'];
   }
 }
@@ -47,7 +64,7 @@ function getDatasDisponiveis(perfil) {
 // Retorna os pacientes da aba especificada, para o perfil informado
 function getPacientesPorData(dataStr, perfil) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
     if (!sheet) return [];
 
@@ -91,7 +108,7 @@ function getPacientesPorData(dataStr, perfil) {
 // Salva ou edita um paciente na aba da data especificada, para o perfil informado
 function salvarPaciente(dataStr, paciente, perfil) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet_();
     const sheetName = resolveSheetName_(perfil, dataStr);
     let sheet = ss.getSheetByName(sheetName);
 
@@ -154,7 +171,7 @@ function getItensSheet_(ss) {
 // Retorna o catálogo de itens de dieta agrupado por categoria
 function getItensDieta() {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet_();
     const sheet = getItensSheet_(ss);
     const data = sheet.getDataRange().getValues();
 
@@ -170,7 +187,7 @@ function getItensDieta() {
     }
     return catalogo;
   } catch(e) {
-    // Fallback Mock para testes sem ID da planilha
+    // Fallback mock em caso de erro inesperado
     return {
       Desjejum: ['CAFÉ COMPLETO', 'MINGAU DE AVEIA', 'CAFÉ COMPLETO DM'],
       Colacao: ['SUCO', 'SUCO DM', 'VITAMINA'],
@@ -188,7 +205,7 @@ function adicionarItemDieta(categoria, item) {
     if (CATEGORIAS_DIETA.indexOf(categoria) === -1) {
       return { success: false, error: 'Categoria inválida' };
     }
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet_();
     const sheet = getItensSheet_(ss);
     sheet.appendRow([categoria, item]);
     return { success: true };
@@ -200,7 +217,7 @@ function adicionarItemDieta(categoria, item) {
 // Remove um item do catálogo de uma categoria
 function removerItemDieta(categoria, item) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet_();
     const sheet = getItensSheet_(ss);
     const data = sheet.getDataRange().getValues();
 
