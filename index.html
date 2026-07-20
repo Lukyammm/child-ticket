@@ -182,7 +182,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-print')">Cancelar</button>
-      <button class="btn primary" onclick="window.print()">Imprimir Etiqueta</button>
+      <button class="btn primary" onclick="doPrint()">Imprimir Etiqueta</button>
     </div>
   </div>
 </div>
@@ -253,6 +253,86 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 </div>
 
 <script>
+  // === Sound UX System (Web Audio API) ===
+  const SoundUX = {
+    ctx: null,
+    init() {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    },
+    playOsc(type, freq, time, vol=0.1) {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + time);
+      
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      osc.start();
+      osc.stop(this.ctx.currentTime + time);
+    },
+    hover() {
+      // Pop muito suave e curto
+      this.playOsc('sine', 400, 0.05, 0.01);
+    },
+    click() {
+      // Click limpo e agudo
+      this.playOsc('triangle', 600, 0.05, 0.05);
+      setTimeout(() => this.playOsc('sine', 800, 0.05, 0.02), 20);
+    },
+    success() {
+      // Acorde feliz
+      this.playOsc('sine', 523.25, 0.3, 0.05); // C5
+      setTimeout(() => this.playOsc('sine', 659.25, 0.4, 0.05), 100); // E5
+      setTimeout(() => this.playOsc('sine', 783.99, 0.5, 0.05), 200); // G5
+    },
+    error() {
+      // Duplo beep grave
+      this.playOsc('sawtooth', 150, 0.2, 0.05);
+      setTimeout(() => this.playOsc('sawtooth', 120, 0.3, 0.05), 150);
+    },
+    print() {
+      // Som mecânico sutil
+      this.playOsc('square', 300, 0.1, 0.02);
+      setTimeout(() => this.playOsc('square', 400, 0.1, 0.02), 50);
+      setTimeout(() => this.playOsc('square', 300, 0.1, 0.02), 100);
+    }
+  };
+
+  // Attach sound to DOM elements
+  function attachSounds() {
+    const interactables = document.querySelectorAll('.btn, .meal-btn, .edit-btn');
+    interactables.forEach(el => {
+      // Remove listeners antigos se houver (hack simples)
+      const newEl = el.cloneNode(true);
+      if(el.parentNode) el.parentNode.replaceChild(newEl, el);
+      
+      newEl.addEventListener('mouseenter', () => {
+        SoundUX.init();
+        SoundUX.hover();
+      });
+      newEl.addEventListener('click', (e) => {
+        SoundUX.init();
+        SoundUX.click();
+      });
+    });
+  }
+
+  // Monitor clicks genéricos para inicializar AudioContext (requerimento de segurança do navegador)
+  document.body.addEventListener('click', () => {
+    SoundUX.init();
+  }, { once: true });
+
+
   let dataPacientes = [];
   let currentDate = "";
 
@@ -267,6 +347,9 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
   // Toasts
   function showToast(msg, type='success') {
+    if(type === 'success') SoundUX.success();
+    if(type === 'error') SoundUX.error();
+    
     const c = document.getElementById('toasts');
     const t = document.createElement('div');
     t.className = `toast ${type}`;
@@ -278,6 +361,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   // Init
   document.addEventListener("DOMContentLoaded", () => {
     loadDates();
+    attachSounds(); // initial attach for top buttons
   });
 
   function loadDates() {
@@ -296,7 +380,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const hoje = getDataAtual();
     if (!dates.includes(hoje)) dates.push(hoje);
     
-    // Sort basic (assume formato dd/mm/yyyy) - simplify to just populate
     dates.forEach(d => {
       const opt = document.createElement("option");
       opt.value = d;
@@ -352,7 +435,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
       const renderMealBtn = (mealVal, mealName) => {
         if (!mealVal) return '-';
-        return `<button class="meal-btn" onclick="openPrintModal(${index}, '${mealName}')">${mealVal}</button>`;
+        // Adicionando um id unico para o botão para controle
+        return `<button class="meal-btn" onclick="openPrintModal(this, ${index}, '${mealName}')">${mealVal}</button>`;
       };
 
       tr.appendChild(tdInfo);
@@ -367,21 +451,40 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       `;
       tbody.appendChild(tr);
     });
+    
+    // Attach sounds a todos os botões novos gerados
+    attachSounds();
   }
 
   // === Modal Print ===
-  function openPrintModal(index, mealName) {
-    const p = dataPacientes[index];
-    document.getElementById("lbl-data").innerText = currentDate;
-    const pacienteStr = p.prontuario_nome.includes("-") 
-      ? `Paciente: ${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}` 
-      : `Paciente: ${p.prontuario_nome}`;
+  function openPrintModal(btnContext, index, mealName) {
+    // Microinteração visual
+    const originalText = btnContext.innerText;
+    btnContext.disabled = true;
+    btnContext.innerText = 'Carregando...';
     
-    document.getElementById("lbl-paciente").innerText = pacienteStr;
-    document.getElementById("lbl-refeicao").innerText = mealName;
-    document.getElementById("lbl-dieta").innerText = p.dieta.toUpperCase();
+    // Pequeno delay para a percepção de carregamento antes de abrir o modal
+    setTimeout(() => {
+      btnContext.disabled = false;
+      btnContext.innerText = originalText;
+      
+      const p = dataPacientes[index];
+      document.getElementById("lbl-data").innerText = currentDate;
+      const pacienteStr = p.prontuario_nome.includes("-") 
+        ? `Paciente: ${p.prontuario_nome.split('-')[0].trim()} - ${p.prontuario_nome.split('-').slice(1).join('-').trim()}` 
+        : `Paciente: ${p.prontuario_nome}`;
+      
+      document.getElementById("lbl-paciente").innerText = pacienteStr;
+      document.getElementById("lbl-refeicao").innerText = mealName;
+      document.getElementById("lbl-dieta").innerText = p.dieta.toUpperCase();
 
-    document.getElementById("modal-print").classList.add("open");
+      document.getElementById("modal-print").classList.add("open");
+    }, 400); // 400ms delay para feedback visual
+  }
+
+  function doPrint() {
+    SoundUX.print();
+    window.print();
   }
 
   // === Modal Form (Adicionar/Editar) ===
@@ -415,7 +518,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     e.preventDefault();
     const btn = document.getElementById("btn-salvar");
     btn.disabled = true;
-    btn.innerText = "Salvando...";
+    btn.innerText = "Salvando..."; // Feedback imediato bloqueando a tela de envio duplo
 
     const paciente = {
       id: document.getElementById("f-id").value,
