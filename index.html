@@ -214,7 +214,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         <option value="">Carregando datas...</option>
       </select>
       <button class="btn" title="Escolher outro dia (ex: preparar o de amanhã)" onclick="abrirNovoDia()">+ Novo dia</button>
-      <input type="date" id="novo-dia-input" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none" onchange="onNovoDiaEscolhido()" tabindex="-1" aria-hidden="true">
+      <input type="date" id="novo-dia-input" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px" onchange="onNovoDiaEscolhido()" tabindex="-1" aria-hidden="true">
       <button class="btn primary" onclick="openFormModal()">+ Adicionar Paciente</button>
       <button class="btn" title="Imprimir várias etiquetas de uma vez" onclick="abrirImpressaoLote()">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -435,6 +435,22 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     return `${dia}/${mes}/${ano}`;
   }
 
+  // Helper para amanhã (dia seguinte ao atual), formato dd/mm/yyyy
+  function getDataAmanha() {
+    const data = new Date();
+    data.setDate(data.getDate() + 1);
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  // Converte "dd/mm/yyyy" para "yyyy-mm-dd" (formato aceito por <input type="date">).
+  function dataBRParaISO(dataBR) {
+    const [dia, mes, ano] = dataBR.split('/');
+    return `${ano}-${mes}-${dia}`;
+  }
+
   // Toasts
   function showToast(msg, type='success') {
     const c = document.getElementById('toasts');
@@ -512,9 +528,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     const sel = document.getElementById("date-select");
     sel.innerHTML = "";
 
-    // Garantir que a data atual está na lista, se não, adiciona
+    // Garantir que a data atual e a de amanhã estão na lista, se não, adiciona
     const hoje = getDataAtual();
+    const amanha = getDataAmanha();
     if (!dates.includes(hoje)) dates.push(hoje);
+    if (!dates.includes(amanha)) dates.push(amanha);
 
     // Ordena por data (mais recente primeiro); datas em formato inesperado vão para o fim.
     dates.sort((a, b) => {
@@ -532,7 +550,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       sel.appendChild(opt);
     });
 
-    sel.value = hoje;
+    // Prioridade padrão: sempre o próximo dia (amanhã).
+    sel.value = amanha;
     // Setar .value por código NÃO dispara o evento onchange, então precisamos
     // carregar os pacientes do dia manualmente aqui. Sem isto, a tabela nunca
     // puxa os dados da planilha ao abrir a página ou ao trocar de perfil.
@@ -777,7 +796,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   // === Novo dia (escolher uma data futura, ex: preparar o de amanhã) ===
   function abrirNovoDia() {
     const input = document.getElementById("novo-dia-input");
-    if (input.showPicker) { try { input.showPicker(); return; } catch(e) {} }
+    // Sugere amanhã como padrão ao abrir o seletor, já que é a prioridade de uso.
+    if (!input.value) input.value = dataBRParaISO(getDataAmanha());
+    if (input.showPicker) {
+      try { input.showPicker(); return; } catch (e) { /* segue para o fallback abaixo */ }
+    }
     input.focus();
     input.click();
   }
