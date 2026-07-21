@@ -1,8 +1,19 @@
 // Google Apps Script - Casa da Gestante / Oncológico
 
-// Senha da área de administração (cadastro de itens de dieta).
-// ALTERE esta senha antes de usar em produção.
+// Senha INICIAL da área de administração. Depois do primeiro uso, a senha pode
+// ser alterada pelo próprio painel admin (fica salva em Script Properties e
+// esta constante passa a ser ignorada). ALTERE antes de usar em produção.
 const ADMIN_PASSWORD = 'admin123';
+
+// Senha vigente: a salva em Script Properties (se o admin já trocou) ou a constante.
+function getAdminPassword_() {
+  return PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD') || ADMIN_PASSWORD;
+}
+
+// Confere a senha admin em chamadas sensíveis vindas do frontend.
+function checarSenhaAdmin_(senha) {
+  return String(senha || '') === getAdminPassword_();
+}
 
 // Prefixo usado nas abas do perfil Oncológico, para não colidir com as abas
 // já existentes do perfil Casa da Gestante (que continuam usando o nome puro da data).
@@ -128,10 +139,12 @@ function getDatasDisponiveis(perfil) {
     if (perfil === 'ONCOLOGICO') {
       return nomes
         .filter(n => n.indexOf(PREFIXO_ONCOLOGICO) === 0)
-        .map(n => n.substring(PREFIXO_ONCOLOGICO.length));
+        .map(n => n.substring(PREFIXO_ONCOLOGICO.length))
+        .filter(n => parseDataBR_(n) !== null);
     }
-    // Gestante: abas que NÃO usam o prefixo Oncológico (mantém compatibilidade com abas antigas)
-    return nomes.filter(n => n.indexOf(PREFIXO_ONCOLOGICO) !== 0 && n !== 'ITENS_DIETA');
+    // Gestante: abas sem o prefixo Oncológico cujo nome é uma data válida
+    // (exclui automaticamente ITENS_DIETA, SISTEMA_LOGS, ALTAS e afins).
+    return nomes.filter(n => n.indexOf(PREFIXO_ONCOLOGICO) !== 0 && parseDataBR_(n) !== null);
   } catch(e) {
     return [];
   }
@@ -271,9 +284,22 @@ function salvarPaciente(dataStr, paciente, perfil) {
   }
 }
 
+// Garante a aba de registro de ALTAS. Fica VISÍVEL na planilha de propósito:
+// é o registro permanente e auditável de quem recebeu alta, quando e por quem.
+function getAltasSheet_(ss) {
+  let sheet = ss.getSheetByName('ALTAS');
+  if (!sheet) {
+    sheet = ss.insertSheet('ALTAS');
+    sheet.appendRow(['Data / Hora da Alta', 'Dia da Lista', 'Perfil', 'Prontuário / Paciente', 'Diagnóstico', 'Dieta', 'Registrado por']);
+    sheet.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#e3f0ea');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
 // Remove (dá "alta") um paciente da aba da data/perfil informados, pelo rowNumber.
-// Necessário porque, com a herança automática entre dias, quem recebe alta precisa
-// deixar de ser copiado para os próximos dias.
+// Além de remover da lista do dia (para deixar de ser herdado nos próximos), o
+// paciente é registrado permanentemente na aba ALTAS — a alta nunca some sem rastro.
 function removerPaciente(dataStr, rowNumber, perfil) {
   try {
     const ss = getSpreadsheet_();
@@ -285,6 +311,18 @@ function removerPaciente(dataStr, rowNumber, perfil) {
       return { success: false, error: 'Linha inválida.' };
     }
     const valoresRemovidos = sheet.getRange(linha, 1, 1, 10).getValues()[0];
+
+    let usuario = 'Desconhecido';
+    try { usuario = Session.getActiveUser().getEmail() || 'Desconhecido'; } catch(e) {}
+
+    // Registra a alta ANTES de apagar a linha: se algo falhar, o pior caso é o
+    // paciente continuar na lista — nunca uma alta sem registro.
+    getAltasSheet_(ss).appendRow([
+      new Date(), dataStr,
+      perfil === 'ONCOLOGICO' ? 'Oncológico' : 'Casa da Gestante',
+      valoresRemovidos[0], valoresRemovidos[1], valoresRemovidos[2], usuario
+    ]);
+
     sheet.deleteRow(linha);
     logEvent('PACIENTE_REMOVIDO', perfil, { dataStr, rowNumber, pacienteNome: valoresRemovidos[0] });
     return { success: true };
@@ -293,13 +331,126 @@ function removerPaciente(dataStr, rowNumber, perfil) {
   }
 }
 
+// Retorna as últimas `limite` altas registradas (mais recentes primeiro).
+function getAltas(limite) {
+  try {
+    const ss = getSpreadsheet_();
+    const sheet = ss.getSheetByName('ALTAS');
+    if (!sheet || sheet.getLastRow() < 2) return { success: true, altas: [] };
+
+    const max = Math.min(Number(limite) || 100, 300);
+    const total = sheet.getLastRow() - 1;
+    const qtd = Math.min(total, max);
+    const primeira = sheet.getLastRow() - qtd + 1;
+    const valores = sheet.getRange(primeira, 1, qtd, 7).getValues();
+
+    const tz = Session.getScriptTimeZone();
+    const altas = valores.map(row => ({
+      dataHora: row[0] instanceof Date ? Utilities.formatDate(row[0], tz, 'dd/MM/yyyy HH:mm') : String(row[0]),
+      diaLista: String(row[1] || ''),
+      perfil: String(row[2] || ''),
+      paciente: String(row[3] || ''),
+      diagnostico: String(row[4] || ''),
+      dieta: String(row[5] || ''),
+      usuario: String(row[6] || '')
+    })).reverse();
+    return { success: true, altas: altas };
+  } catch(e) {
+    return { success: false, error: e.toString(), altas: [] };
+  }
+}
+
 // === Administração ===
 
 // Verifica a senha de acesso à área de administração
 function verificarSenhaAdmin(senha) {
-  const sucesso = (senha === ADMIN_PASSWORD);
-  logEvent(sucesso ? 'LOGIN_ADMIN_SUCESSO' : 'LOGIN_ADMIN_FALHA', 'ADMIN', { senhaTentada: sucesso ? '***' : senha });
+  const sucesso = checarSenhaAdmin_(senha);
+  logEvent(sucesso ? 'LOGIN_ADMIN_SUCESSO' : 'LOGIN_ADMIN_FALHA', 'ADMIN', {});
   return { success: sucesso };
+}
+
+// Altera a senha de administração (salva em Script Properties).
+function alterarSenhaAdmin(senhaAtual, novaSenha) {
+  try {
+    if (!checarSenhaAdmin_(senhaAtual)) return { success: false, error: 'Senha atual incorreta.' };
+    const nova = String(novaSenha || '').trim();
+    if (nova.length < 4) return { success: false, error: 'A nova senha precisa ter pelo menos 4 caracteres.' };
+    PropertiesService.getScriptProperties().setProperty('ADMIN_PASSWORD', nova);
+    logEvent('SENHA_ADMIN_ALTERADA', 'ADMIN', {});
+    return { success: true };
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// Visão geral de todos os dias registrados, nos dois perfis, com contagem de
+// pacientes. Usado no painel admin ("ver tudo").
+function getResumoDias(senha) {
+  try {
+    if (!checarSenhaAdmin_(senha)) return { success: false, error: 'Acesso negado.', dias: [] };
+    const ss = getSpreadsheet_();
+    const dias = [];
+    ss.getSheets().forEach(sheet => {
+      const nome = sheet.getName();
+      if (nome === 'ITENS_DIETA' || nome === 'SISTEMA_LOGS') return;
+      const ehOnco = nome.indexOf(PREFIXO_ONCOLOGICO) === 0;
+      const dataStr = ehOnco ? nome.substring(PREFIXO_ONCOLOGICO.length) : nome;
+      if (!parseDataBR_(dataStr)) return; // ignora abas que não são de dia
+      dias.push({
+        data: dataStr,
+        perfil: ehOnco ? 'ONCOLOGICO' : 'GESTANTE',
+        qtdPacientes: Math.max(0, sheet.getLastRow() - 1)
+      });
+    });
+    return { success: true, dias: dias };
+  } catch(e) {
+    return { success: false, error: e.toString(), dias: [] };
+  }
+}
+
+// Exclui a aba de um dia inteiro (ex: dia criado por engano). Só via admin.
+function removerDia(dataStr, perfil, senha) {
+  try {
+    if (!checarSenhaAdmin_(senha)) return { success: false, error: 'Acesso negado.' };
+    const ss = getSpreadsheet_();
+    const sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
+    if (!sheet) return { success: false, error: 'Aba não encontrada.' };
+    const qtd = Math.max(0, sheet.getLastRow() - 1);
+    ss.deleteSheet(sheet);
+    logEvent('DIA_REMOVIDO', perfil, { dataStr: dataStr, qtdPacientes: qtd });
+    return { success: true };
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+// Retorna os últimos `limite` eventos do log do sistema (mais recentes primeiro).
+// Usado no painel admin para auditoria: quem mexeu, quando e no quê.
+function getLogs(senha, limite) {
+  try {
+    if (!checarSenhaAdmin_(senha)) return { success: false, error: 'Acesso negado.', logs: [] };
+    const ss = getSpreadsheet_();
+    const sheet = ss.getSheetByName('SISTEMA_LOGS');
+    if (!sheet || sheet.getLastRow() < 2) return { success: true, logs: [] };
+
+    const max = Math.min(Number(limite) || 100, 300);
+    const total = sheet.getLastRow() - 1;
+    const qtd = Math.min(total, max);
+    const primeira = sheet.getLastRow() - qtd + 1;
+    const valores = sheet.getRange(primeira, 1, qtd, 5).getValues();
+
+    const tz = Session.getScriptTimeZone();
+    const logs = valores.map(row => ({
+      dataHora: row[0] instanceof Date ? Utilities.formatDate(row[0], tz, 'dd/MM/yyyy HH:mm') : String(row[0]),
+      usuario: String(row[1] || ''),
+      acao: String(row[2] || ''),
+      perfil: String(row[3] || ''),
+      detalhes: String(row[4] || '')
+    })).reverse();
+    return { success: true, logs: logs };
+  } catch(e) {
+    return { success: false, error: e.toString(), logs: [] };
+  }
 }
 
 // Garante que a aba do catálogo de itens de dieta existe.
