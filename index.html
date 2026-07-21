@@ -181,6 +181,38 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .toast.error { background: #b3402e; }
 .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
 
+/* Painel Admin: abas */
+.admin-tabs { display: flex; gap: 2px; padding: 0 20px; border-bottom: 1px solid var(--line); background: var(--paper); overflow-x: auto; }
+.admin-tab { border: none; background: transparent; padding: 11px 14px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--mut); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: .15s; }
+.admin-tab:hover { color: var(--ink); }
+.admin-tab.active { color: var(--pri); border-bottom-color: var(--pri); }
+
+/* Painel Admin: tabela de dias */
+.admin-dias-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-dias-tbl th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--mut); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.admin-dias-tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.admin-dias-tbl tr:last-child td { border-bottom: none; }
+.admin-dias-tbl .mini-btn { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: .15s; }
+.admin-dias-tbl .mini-btn:hover { border-color: var(--pri); color: var(--pri-d); }
+.admin-dias-tbl .mini-btn.danger { color: #b3402e; }
+.admin-dias-tbl .mini-btn.danger:hover { background: #fbe9e6; border-color: #b3402e; color: #b3402e; }
+.perfil-pill { display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 10px; }
+.perfil-pill.gestante { background: #fbe6ee; color: #99194a; }
+.perfil-pill.onco { background: #e3f0ea; color: #0a5a46; }
+
+/* Painel Admin: histórico (logs) */
+.log-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+.log-item { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 12.5px; }
+.log-item .log-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+.log-item .log-acao { font-weight: 700; }
+.log-item .log-quando { color: var(--mut); white-space: nowrap; }
+.log-item .log-det { color: var(--mut); word-break: break-word; }
+
+/* Busca de pacientes do dia */
+.busca-paciente { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; min-width: 180px; transition: .15s; }
+.busca-paciente:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(14,122,95,.12); }
+.contador-pacientes { font-size: 12px; color: var(--mut); font-weight: 600; white-space: nowrap; }
+
 .banner-heranca { padding: 10px 20px; background: #fff8e6; border-bottom: 1px solid #f0e2b6; color: #7a5c00; font-size: 12.5px; line-height: 1.5; }
 
 .loader { text-align: center; padding: 40px; color: var(--mut); font-weight: 500; }
@@ -331,8 +363,12 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
 <main>
   <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="gap:10px; flex-wrap:wrap;">
       <h2 id="table-title">Pacientes do Dia</h2>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span class="contador-pacientes" id="contador-pacientes"></span>
+        <input type="search" id="busca-paciente" class="busca-paciente" placeholder="Buscar paciente..." oninput="onBuscaPaciente()">
+      </div>
     </div>
     <div id="banner-heranca" class="banner-heranca" style="display:none"></div>
     <div class="tbl-wrap">
@@ -484,17 +520,23 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
   </div>
 </div>
 
-<!-- Modal Painel Admin (Catálogo de Itens de Dieta) -->
+<!-- Modal Painel Admin (Itens, Dias, Histórico, Senha) -->
 <div class="overlay" id="modal-admin">
-  <div class="modal" style="max-width: 520px;">
+  <div class="modal" style="max-width: 640px;">
     <div class="modal-header">
-      <h3>Itens de Dieta</h3>
+      <h3>Administração</h3>
       <button class="xbtn" onclick="closeModal('modal-admin')">×</button>
     </div>
+    <div class="admin-tabs" role="tablist">
+      <button type="button" class="admin-tab active" id="admin-tab-itens" onclick="trocarAbaAdmin('itens')">Itens de Dieta</button>
+      <button type="button" class="admin-tab" id="admin-tab-dias" onclick="trocarAbaAdmin('dias')">Dias</button>
+      <button type="button" class="admin-tab" id="admin-tab-altas" onclick="trocarAbaAdmin('altas')">Altas</button>
+      <button type="button" class="admin-tab" id="admin-tab-logs" onclick="trocarAbaAdmin('logs')">Histórico</button>
+      <button type="button" class="admin-tab" id="admin-tab-senha" onclick="trocarAbaAdmin('senha')">Senha</button>
+    </div>
     <div class="modal-body">
-      <p class="admin-panel-desc">Esses itens ficam disponíveis para seleção rápida em todas as refeições (Desjejum, Colação, Almoço, Lanche, Jantar e Ceia), para os dois perfis.</p>
       <div id="admin-body">
-        <div class="loader">Carregando catálogo...</div>
+        <div class="loader">Carregando...</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -808,17 +850,48 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     }
   }
 
+  // Texto digitado na busca de pacientes do dia (filtro apenas visual).
+  let filtroPaciente = '';
+
+  function onBuscaPaciente() {
+    filtroPaciente = document.getElementById('busca-paciente').value.trim().toLowerCase();
+    renderTable(dataPacientes);
+  }
+
   function renderTable(pacientes) {
     dataPacientes = pacientes;
     const tbody = document.getElementById("tb-pacientes");
     tbody.innerHTML = "";
+
+    const contador = document.getElementById("contador-pacientes");
+    contador.textContent = pacientes.length === 0 ? "" :
+      pacientes.length + (pacientes.length === 1 ? " paciente" : " pacientes");
 
     if (pacientes.length === 0) {
       tbody.innerHTML = "<tr><td colspan='9' class='loader'>Nenhum paciente encontrado para esta data. Adicione um novo!</td></tr>";
       return;
     }
 
+    // Filtro de busca: compara com nome/prontuário, diagnóstico e dieta.
+    // Mantém o índice ORIGINAL de cada paciente, usado por editar/imprimir.
+    const visiveis = [];
     pacientes.forEach((p, index) => {
+      if (filtroPaciente) {
+        const alvo = `${p.prontuario_nome} ${p.diagnostico} ${p.dieta}`.toLowerCase();
+        if (!alvo.includes(filtroPaciente)) return;
+      }
+      visiveis.push({ p, index });
+    });
+
+    if (visiveis.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='9' class='loader'>Nenhum paciente corresponde à busca.</td></tr>";
+      return;
+    }
+    if (filtroPaciente) {
+      contador.textContent = visiveis.length + " de " + pacientes.length + " pacientes";
+    }
+
+    visiveis.forEach(({ p, index }) => {
       const tr = document.createElement("tr");
 
       const tdInfo = document.createElement("td");
@@ -828,6 +901,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
         <div class="paciente-nome">${escapeHtml(p.prontuario_nome)}</div>
         <div class="paciente-diag">${escapeHtml(p.diagnostico)}</div>
         <button class="edit-btn" onclick="openFormModal(${index})">Editar paciente</button>
+        <button class="edit-btn" onclick="imprimirTodasDoPaciente(${index})" title="Imprime uma etiqueta para cada refeição preenchida deste paciente">Imprimir etiquetas</button>
       `;
 
       const tdDieta = document.createElement("td");
@@ -1030,6 +1104,22 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     }
     Tracker.log('IMPRESSAO_LOTE', { quantidade_etiquetas: inners.length });
     closeModal("modal-lote");
+    imprimirEtiquetas(inners);
+  }
+
+  // Imprime de uma vez todas as etiquetas (refeições preenchidas) de um paciente.
+  function imprimirTodasDoPaciente(index) {
+    const p = dataPacientes[index];
+    if (!p) return;
+    const inners = [];
+    MEAL_CATEGORIES.forEach(cat => {
+      if (p[cat.field]) inners.push(buildLabelInner(p, cat));
+    });
+    if (!inners.length) {
+      showToast("Este paciente não tem refeições preenchidas", "error");
+      return;
+    }
+    Tracker.log('IMPRESSAO_PACIENTE_COMPLETO', { paciente: p.prontuario_nome, quantidade_etiquetas: inners.length });
     imprimirEtiquetas(inners);
   }
 
@@ -1437,7 +1527,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     }
   }
 
-  // === Administração (catálogo de itens de dieta) ===
+  // === Administração ===
+  let adminSenha = null;   // senha validada, reutilizada nas chamadas sensíveis
+  let adminAba = 'itens';  // aba ativa do painel
+
   function abrirLoginAdmin() {
     document.getElementById("admin-login-form").reset();
     document.getElementById("modal-admin-login").classList.add("open");
@@ -1454,6 +1547,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       btn.disabled = false;
       btn.innerHTML = 'Entrar';
       if (res.success) {
+        adminSenha = senha;
         closeModal("modal-admin-login");
         abrirPainelAdmin();
       } else {
@@ -1474,12 +1568,295 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 
   function abrirPainelAdmin() {
     document.getElementById("modal-admin").classList.add("open");
-    renderAdminBody();
+    trocarAbaAdmin(adminAba);
   }
 
+  function trocarAbaAdmin(aba) {
+    adminAba = aba;
+    ['itens', 'dias', 'altas', 'logs', 'senha'].forEach(a => {
+      const el = document.getElementById('admin-tab-' + a);
+      if (el) el.classList.toggle('active', a === aba);
+    });
+    const body = document.getElementById("admin-body");
+    body.innerHTML = '<div class="loader">Carregando...</div>';
+    if (aba === 'itens') renderAdminBody();
+    else if (aba === 'dias') renderAdminDias();
+    else if (aba === 'altas') renderAdminAltas();
+    else if (aba === 'logs') renderAdminLogs();
+    else if (aba === 'senha') renderAdminSenha();
+  }
+
+  // --- Aba Dias: visão geral de todos os dias registrados, nos dois perfis ---
+  function renderAdminDias() {
+    const aoReceber = (res) => {
+      const body = document.getElementById("admin-body");
+      if (adminAba !== 'dias') return;
+      body.innerHTML = '';
+      if (!res || !res.success) {
+        body.innerHTML = '<p class="admin-panel-desc">Erro ao carregar: ' + escapeHtml((res && res.error) || '') + '</p>';
+        return;
+      }
+      const desc = document.createElement('p');
+      desc.className = 'admin-panel-desc';
+      desc.textContent = 'Todos os dias registrados na planilha, nos dois perfis. "Abrir" leva direto para a lista daquele dia; "Excluir" apaga a aba inteira (use para dias criados por engano).';
+      body.appendChild(desc);
+
+      if (!res.dias.length) {
+        body.insertAdjacentHTML('beforeend', '<div class="admin-empty"><p>Nenhum dia registrado ainda</p></div>');
+        return;
+      }
+
+      const dias = res.dias.slice().sort((a, b) => {
+        const da = parseDataBR(a.data), db = parseDataBR(b.data);
+        return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+      });
+
+      const tbl = document.createElement('table');
+      tbl.className = 'admin-dias-tbl';
+      tbl.innerHTML = '<thead><tr><th>Dia</th><th>Perfil</th><th>Pacientes</th><th></th></tr></thead>';
+      const tbody = document.createElement('tbody');
+      dias.forEach(d => {
+        const tr = document.createElement('tr');
+        const pill = d.perfil === 'ONCOLOGICO'
+          ? '<span class="perfil-pill onco">Oncológico</span>'
+          : '<span class="perfil-pill gestante">Gestante</span>';
+        tr.innerHTML = `<td><b>${escapeHtml(d.data)}</b></td><td>${pill}</td><td>${d.qtdPacientes}</td>`;
+        const tdAcoes = document.createElement('td');
+        tdAcoes.style.textAlign = 'right';
+        tdAcoes.style.whiteSpace = 'nowrap';
+
+        const abrirBtn = document.createElement('button');
+        abrirBtn.type = 'button';
+        abrirBtn.className = 'mini-btn';
+        abrirBtn.textContent = 'Abrir';
+        abrirBtn.onclick = () => abrirDiaDoAdmin(d.data, d.perfil);
+        tdAcoes.appendChild(abrirBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'mini-btn danger';
+        delBtn.textContent = 'Excluir';
+        delBtn.style.marginLeft = '6px';
+        delBtn.onclick = () => excluirDiaAdmin(d.data, d.perfil, d.qtdPacientes);
+        tdAcoes.appendChild(delBtn);
+
+        tr.appendChild(tdAcoes);
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+      body.appendChild(tbl);
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoReceber).withFailureHandler(() => aoReceber(null)).getResumoDias(adminSenha);
+    } else {
+      setTimeout(() => aoReceber({ success: true, dias: [
+        { data: '21/07/2026', perfil: 'GESTANTE', qtdPacientes: 2 },
+        { data: '21/07/2026', perfil: 'ONCOLOGICO', qtdPacientes: 1 },
+        { data: '20/07/2026', perfil: 'GESTANTE', qtdPacientes: 3 }
+      ] }), 300);
+    }
+  }
+
+  function abrirDiaDoAdmin(data, perfil) {
+    closeModal('modal-admin');
+    if (perfil !== currentPerfil) {
+      currentPerfil = perfil;
+      localStorage.setItem('cg_perfil', perfil);
+      aplicarTemaPerfil();
+      loadDates();
+      // loadDates é assíncrono; depois que as datas chegam, seleciona o dia pedido.
+      setTimeout(() => selecionarData(data), 800);
+    } else {
+      selecionarData(data);
+    }
+  }
+
+  function selecionarData(dataBR) {
+    const sel = document.getElementById("date-select");
+    if (![...sel.options].some(o => o.value === dataBR)) {
+      const opt = document.createElement("option");
+      opt.value = dataBR;
+      opt.innerText = dataBR;
+      sel.appendChild(opt);
+      ordenarOpcoesData(sel);
+    }
+    sel.value = dataBR;
+    onDateChange();
+  }
+
+  function excluirDiaAdmin(data, perfil, qtd) {
+    const perfilLabel = perfil === 'ONCOLOGICO' ? 'Oncológico' : 'Gestante';
+    if (!confirm(`Excluir o dia ${data} (${perfilLabel}) com ${qtd} paciente(s)?\n\nIsso apaga a aba inteira da planilha e NÃO pode ser desfeito.`)) return;
+
+    const aoRemover = (res) => {
+      if (res && res.success) {
+        showToast("Dia excluído");
+        renderAdminDias();
+        loadDates();
+      } else {
+        showToast("Erro ao excluir: " + ((res && res.error) || ''), "error");
+      }
+    };
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoRemover).withFailureHandler(() => aoRemover(null)).removerDia(data, perfil, adminSenha);
+    } else {
+      setTimeout(() => aoRemover({ success: true }), 300);
+    }
+  }
+
+  // --- Aba Altas: registro permanente de quem recebeu alta ---
+  function renderAdminAltas() {
+    const aoReceber = (res) => {
+      if (adminAba !== 'altas') return;
+      const body = document.getElementById("admin-body");
+      body.innerHTML = '';
+      if (!res || !res.success) {
+        body.innerHTML = '<p class="admin-panel-desc">Erro ao carregar: ' + escapeHtml((res && res.error) || '') + '</p>';
+        return;
+      }
+      const desc = document.createElement('p');
+      desc.className = 'admin-panel-desc';
+      desc.textContent = 'Registro permanente de altas: quando, quem era o paciente, de qual dia ele saiu e quem registrou. Também fica gravado na aba "ALTAS" da planilha.';
+      body.appendChild(desc);
+
+      if (!res.altas.length) {
+        body.insertAdjacentHTML('beforeend', '<div class="admin-empty"><p>Nenhuma alta registrada ainda</p></div>');
+        return;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'log-list';
+      res.altas.forEach(a => {
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        item.innerHTML = `
+          <div class="log-top">
+            <span class="log-acao">${escapeHtml(a.paciente)}</span>
+            <span class="log-quando">${escapeHtml(a.dataHora)}</span>
+          </div>
+          <div class="log-det">Saiu da lista de ${escapeHtml(a.diaLista)} (${escapeHtml(a.perfil)})${a.dieta ? ' · Dieta: ' + escapeHtml(a.dieta) : ''}${a.usuario && a.usuario !== 'Desconhecido' ? ' · Por: ' + escapeHtml(a.usuario) : ''}</div>`;
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoReceber).withFailureHandler(() => aoReceber(null)).getAltas(100);
+    } else {
+      setTimeout(() => aoReceber({ success: true, altas: [
+        { dataHora: '21/07/2026 09:12', diaLista: '21/07/2026', perfil: 'Casa da Gestante', paciente: '21768 - Maria Evilene', diagnostico: 'Puérpera', dieta: 'Geral', usuario: 'enfermeira@exemplo.com' }
+      ] }), 300);
+    }
+  }
+
+  // --- Aba Histórico: log completo de ações do sistema ---
+  function renderAdminLogs() {
+    const aoReceber = (res) => {
+      if (adminAba !== 'logs') return;
+      const body = document.getElementById("admin-body");
+      body.innerHTML = '';
+      if (!res || !res.success) {
+        body.innerHTML = '<p class="admin-panel-desc">Erro ao carregar: ' + escapeHtml((res && res.error) || '') + '</p>';
+        return;
+      }
+      const desc = document.createElement('p');
+      desc.className = 'admin-panel-desc';
+      desc.textContent = 'Últimas ' + res.logs.length + ' ações registradas no sistema (mais recentes primeiro).';
+      body.appendChild(desc);
+
+      if (!res.logs.length) {
+        body.insertAdjacentHTML('beforeend', '<div class="admin-empty"><p>Nenhum evento registrado ainda</p></div>');
+        return;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'log-list';
+      res.logs.forEach(l => {
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        let det = l.detalhes;
+        if (det.length > 160) det = det.substring(0, 160) + '…';
+        item.innerHTML = `
+          <div class="log-top">
+            <span class="log-acao">${escapeHtml(l.acao)}${l.perfil && l.perfil !== '-' ? ' · ' + escapeHtml(l.perfil) : ''}</span>
+            <span class="log-quando">${escapeHtml(l.dataHora)}</span>
+          </div>
+          <div class="log-det">${escapeHtml(det)}${l.usuario && l.usuario !== 'Anônimo' && l.usuario !== 'Desconhecido' ? ' · ' + escapeHtml(l.usuario) : ''}</div>`;
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    };
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoReceber).withFailureHandler(() => aoReceber(null)).getLogs(adminSenha, 100);
+    } else {
+      setTimeout(() => aoReceber({ success: true, logs: [
+        { dataHora: '21/07/2026 08:30', usuario: 'dev@local', acao: 'PACIENTE_ADICIONADO', perfil: 'GESTANTE', detalhes: '{"dataStr":"21/07/2026"}' }
+      ] }), 300);
+    }
+  }
+
+  // --- Aba Senha: troca da senha de administração ---
+  function renderAdminSenha() {
+    const body = document.getElementById("admin-body");
+    body.innerHTML = `
+      <p class="admin-panel-desc">Troque a senha de acesso a esta área de administração. A nova senha vale imediatamente para todos.</p>
+      <div class="field">
+        <label>Senha atual</label>
+        <input type="password" id="f-senha-atual" autocomplete="current-password">
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Nova senha</label>
+          <input type="password" id="f-senha-nova" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label>Repetir nova senha</label>
+          <input type="password" id="f-senha-nova2" autocomplete="new-password">
+        </div>
+      </div>
+      <button type="button" class="btn primary" id="btn-trocar-senha" onclick="trocarSenhaAdmin()">Alterar senha</button>`;
+  }
+
+  function trocarSenhaAdmin() {
+    const atual = document.getElementById('f-senha-atual').value;
+    const nova = document.getElementById('f-senha-nova').value;
+    const nova2 = document.getElementById('f-senha-nova2').value;
+    if (!nova || nova.length < 4) { showToast('A nova senha precisa ter pelo menos 4 caracteres', 'error'); return; }
+    if (nova !== nova2) { showToast('As novas senhas não conferem', 'error'); return; }
+
+    const btn = document.getElementById('btn-trocar-senha');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Alterando...</span>';
+
+    const aoTrocar = (res) => {
+      btn.disabled = false;
+      btn.innerHTML = 'Alterar senha';
+      if (res && res.success) {
+        adminSenha = nova;
+        showToast('Senha alterada com sucesso');
+        renderAdminSenha();
+      } else {
+        showToast('Erro: ' + ((res && res.error) || 'não foi possível alterar'), 'error');
+      }
+    };
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(aoTrocar).withFailureHandler(() => aoTrocar(null)).alterarSenhaAdmin(atual, nova);
+    } else {
+      setTimeout(() => aoTrocar({ success: atual === 'admin123' }), 300);
+    }
+  }
+
+  // --- Aba Itens de Dieta (catálogo) ---
   function renderAdminBody() {
     const body = document.getElementById("admin-body");
     body.innerHTML = '';
+
+    const desc = document.createElement('p');
+    desc.className = 'admin-panel-desc';
+    desc.textContent = 'Esses itens ficam disponíveis para seleção rápida em todas as refeições (Desjejum, Colação, Almoço, Lanche, Jantar e Ceia), para os dois perfis.';
+    body.appendChild(desc);
 
     const addDiv = document.createElement('div');
     addDiv.className = 'admin-add';
