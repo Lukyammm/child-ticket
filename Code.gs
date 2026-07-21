@@ -75,10 +75,14 @@ function encontrarDiaAnterior_(ss, perfil, dataStr) {
   return melhor;
 }
 
-// Cria uma aba nova para `sheetName`, com cabeçalho e as linhas de pacientes fornecidas.
+// Cria uma aba nova para `sheetName`, com cabeçalho formatado e as linhas de pacientes fornecidas.
 function criarAbaComPacientes_(ss, sheetName, pacientes) {
   const sheet = ss.insertSheet(sheetName);
   sheet.appendRow(HEADER_);
+  const headerRange = sheet.getRange(1, 1, 1, HEADER_.length);
+  headerRange.setFontWeight("bold");
+  headerRange.setBackground("#e3f0ea");
+  sheet.setFrozenRows(1);
   if (pacientes && pacientes.length) {
     const linhas = pacientes.map(p => [
       p.prontuario_nome, p.diagnostico, p.dieta,
@@ -135,26 +139,65 @@ function getDatasDisponiveis(perfil) {
 
 // Retorna os pacientes da aba da data/perfil informados.
 //
-// Herança automática: se a aba ainda não existe (ou só tem cabeçalho) e a data
-// pedida é hoje ou futura, o sistema copia os pacientes + dietas do último dia
-// registrado anterior para uma nova aba dessa data. Assim a rotina "a dieta se
-// repete" não exige redigitar todo mundo — basta ajustar as exceções.
-// Datas passadas nunca são preenchidas por herança (evita reescrever histórico).
+// Retorna { pacientes, herdadoDe }:
+//  - Se a aba do dia existe com dados, `pacientes` são os dados reais e herdadoDe = null.
+//  - Se a aba ainda não existe (ou só tem cabeçalho) e a data é hoje ou futura,
+//    devolve uma PRÉVIA com os pacientes do último dia registrado anterior
+//    (herdadoDe = "dd/mm/yyyy"), SEM gravar nada na planilha. A aba só é criada
+//    de fato quando alguém edita/salva/dá alta naquele dia (ver materializarDia).
+//    Isso evita o bug de "congelar" uma cópia do dia anterior só por visualizar
+//    um dia futuro — paciente que recebe alta hoje não reaparece amanhã.
+// Datas passadas nunca mostram herança (evita reescrever histórico).
 function getPacientesPorData(dataStr, perfil) {
   try {
     const ss = getSpreadsheet_();
-    let sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
+    const sheet = ss.getSheetByName(resolveSheetName_(perfil, dataStr));
 
-    const vazia = !sheet || sheet.getLastRow() < 2;
-    if (vazia && dataEhHojeOuFutura_(dataStr)) {
+    if (sheet && sheet.getLastRow() >= 2) {
+      return { pacientes: lerPacientesDaAba_(sheet), herdadoDe: null };
+    }
+
+    if (dataEhHojeOuFutura_(dataStr)) {
       const diaAnterior = encontrarDiaAnterior_(ss, perfil, dataStr);
       if (diaAnterior) {
         const anterior = ss.getSheetByName(resolveSheetName_(perfil, diaAnterior));
-        const herdados = anterior ? lerPacientesDaAba_(anterior) : [];
-        if (herdados.length && !sheet) {
-          sheet = criarAbaComPacientes_(ss, resolveSheetName_(perfil, dataStr), herdados);
-        } else if (herdados.length && sheet) {
-          // Aba existia mas só com cabeçalho: preenche as linhas herdadas.
+        const pacientes = anterior ? lerPacientesDaAba_(anterior) : [];
+        // Prévia: sem rowNumber, pois essas linhas ainda não existem nesta aba.
+        pacientes.forEach(p => { p.rowNumber = null; });
+        if (pacientes.length) return { pacientes: pacientes, herdadoDe: diaAnterior };
+      }
+    }
+
+    return { pacientes: [], herdadoDe: null };
+  } catch(e) {
+    return { pacientes: [], herdadoDe: null };
+  }
+}
+
+// Cria de fato a aba do dia (se ainda não existir com dados), copiando os
+// pacientes do último dia anterior NAQUELE MOMENTO — já sem quem recebeu alta.
+// Chamado pelo frontend antes da primeira edição/salvamento em um dia que está
+// sendo exibido como prévia herdada. Retorna os pacientes reais (com rowNumber).
+function materializarDia(dataStr, perfil) {
+  try {
+    const lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+      const ss = getSpreadsheet_();
+      const sheetName = resolveSheetName_(perfil, dataStr);
+      let sheet = ss.getSheetByName(sheetName);
+
+      if (!sheet || sheet.getLastRow() < 2) {
+        let herdados = [];
+        let diaAnterior = null;
+        if (dataEhHojeOuFutura_(dataStr)) {
+          diaAnterior = encontrarDiaAnterior_(ss, perfil, dataStr);
+          const anterior = diaAnterior ? ss.getSheetByName(resolveSheetName_(perfil, diaAnterior)) : null;
+          herdados = anterior ? lerPacientesDaAba_(anterior) : [];
+        }
+        if (!sheet) {
+          sheet = criarAbaComPacientes_(ss, sheetName, herdados);
+        } else if (herdados.length) {
           const linhas = herdados.map(p => [
             p.prontuario_nome, p.diagnostico, p.dieta,
             p.desjejum, p.colacao, p.almoco,
@@ -162,13 +205,15 @@ function getPacientesPorData(dataStr, perfil) {
           ]);
           sheet.getRange(2, 1, linhas.length, HEADER_.length).setValues(linhas);
         }
+        logEvent('DIA_MATERIALIZADO', perfil, { dataStr: dataStr, copiadoDe: diaAnterior, qtdPacientes: herdados.length });
       }
-    }
 
-    if (!sheet) return [];
-    return lerPacientesDaAba_(sheet);
+      return { success: true, pacientes: lerPacientesDaAba_(sheet) };
+    } finally {
+      lock.releaseLock();
+    }
   } catch(e) {
-    return [];
+    return { success: false, error: e.toString(), pacientes: [] };
   }
 }
 
@@ -188,24 +233,11 @@ function salvarPaciente(dataStr, paciente, perfil) {
     const sheetName = resolveSheetName_(perfil, dataStr);
     let sheet = ss.getSheetByName(sheetName);
 
-    // Se a aba para esse dia não existir, cria uma nova com cabeçalho
+    // Se a aba para esse dia não existir, cria uma nova com cabeçalho.
+    // Usa sempre sheetName (com prefixo do perfil quando Oncológico) — antes
+    // era criada com o nome puro da data, misturando os dois perfis.
     if (!sheet) {
-      sheet = ss.insertSheet(dataStr);
-      sheet.appendRow([
-        "Prontuário / Paciente", "Diagnóstico", "Dieta", 
-        "Desjejum - 6h", "Colação - 9h", "Almoço - 12h", 
-        "Lanche - 15h", "Jantar - 18h", "Ceia - 21h", "Observação"
-      ]);
-      
-      // Formatação do cabeçalho recém-criado
-      const headerRange = sheet.getRange(1, 1, 1, 10);
-      headerRange.setFontWeight("bold");
-      headerRange.setBackground("#e3f0ea"); // Cor do design system
-      sheet.setFrozenRows(1); // Congela a primeira linha
-      
-      for (let i = 1; i <= 10; i++) {
-        sheet.autoResizeColumn(i);
-      }
+      sheet = criarAbaComPacientes_(ss, sheetName, []);
     }
 
     const rowData = [

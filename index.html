@@ -181,6 +181,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
 .toast.error { background: #b3402e; }
 .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
 
+.banner-heranca { padding: 10px 20px; background: #fff8e6; border-bottom: 1px solid #f0e2b6; color: #7a5c00; font-size: 12.5px; line-height: 1.5; }
+
 .loader { text-align: center; padding: 40px; color: var(--mut); font-weight: 500; }
 .loader::after { content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--mut); margin-left: 4px; animation: dots 1.4s infinite; }
 @keyframes dots { 0%, 20%, 50%, 80%, 100% { opacity: 1; } 40% { opacity: 0.2; } 60% { opacity: 0.5; } }
@@ -332,6 +334,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     <div class="card-header">
       <h2 id="table-title">Pacientes do Dia</h2>
     </div>
+    <div id="banner-heranca" class="banner-heranca" style="display:none"></div>
     <div class="tbl-wrap">
       <table class="tbl">
         <thead>
@@ -603,16 +606,13 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       .replace(/'/g, '&#39;');
   }
 
-  // Helper para hoje
+  // Retorna a data de hoje no formato dd/mm/yyyy (função pura, sem efeitos colaterais).
   function getDataAtual() {
     const data = new Date();
     const dia = String(data.getDate()).padStart(2, '0');
     const mes = String(data.getMonth() + 1).padStart(2, '0');
     const ano = data.getFullYear();
-    const nova = `${dia}/${mes}/${ano}`;
-    Tracker.log('NOVO_DIA_CRIADO', { data: nova });
-    currentDate = nova;
-    renderAll();
+    return `${dia}/${mes}/${ano}`;
   }
 
   // Helper para amanhã (dia seguinte ao atual), formato dd/mm/yyyy
@@ -737,8 +737,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       sel.appendChild(opt);
     });
 
-    // Prioridade padrão: sempre o próximo dia (amanhã).
-    sel.value = amanha;
+    // Padrão: abre no dia de HOJE. Abrir em "amanhã" confundia a equipe e,
+    // combinado com a antiga herança-na-leitura, causava o bug de paciente com
+    // alta reaparecendo no dia seguinte. Amanhã continua a um clique no seletor.
+    sel.value = hoje;
     // Setar .value por código NÃO dispara o evento onchange, então precisamos
     // carregar os pacientes do dia manualmente aqui. Sem isto, a tabela nunca
     // puxa os dados da planilha ao abrir a página ou ao trocar de perfil.
@@ -752,6 +754,30 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     renderAll();
   }
 
+  // Data de onde os pacientes exibidos foram herdados (prévia ainda não gravada),
+  // ou null quando o dia já tem aba própria na planilha.
+  let diaHerdadoDe = null;
+
+  function renderResultado(res) {
+    // Compatibilidade: aceita tanto o formato novo {pacientes, herdadoDe}
+    // quanto o antigo (array direto).
+    const pacientes = Array.isArray(res) ? res : (res && res.pacientes) || [];
+    diaHerdadoDe = Array.isArray(res) ? null : (res && res.herdadoDe) || null;
+    renderTable(pacientes);
+    atualizarBannerHeranca();
+  }
+
+  function atualizarBannerHeranca() {
+    const banner = document.getElementById("banner-heranca");
+    if (diaHerdadoDe) {
+      banner.style.display = "";
+      banner.innerHTML = `Prévia do dia <b>${escapeHtml(currentDate)}</b> baseada nos pacientes de <b>${escapeHtml(diaHerdadoDe)}</b>. Nada foi gravado ainda — este dia só será salvo na planilha quando você editar, adicionar ou der alta em alguém. Altas dadas em ${escapeHtml(diaHerdadoDe)} são refletidas aqui automaticamente.`;
+    } else {
+      banner.style.display = "none";
+      banner.innerHTML = "";
+    }
+  }
+
   function renderAll() {
     const perfilLabel = currentPerfil === 'ONCOLOGICO' ? 'Oncológico' : 'Casa da Gestante';
     document.getElementById("table-title").innerText = `Pacientes do Dia (${perfilLabel}): ${currentDate}`;
@@ -760,15 +786,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     tbody.innerHTML = "<tr><td colspan='9' class='loader'>Buscando pacientes...</td></tr>";
 
     if (typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler(renderTable).getPacientesPorData(currentDate, currentPerfil);
+      google.script.run.withSuccessHandler(renderResultado).getPacientesPorData(currentDate, currentPerfil);
     } else {
       setTimeout(() => {
         if (currentPerfil === 'ONCOLOGICO') {
-          renderTable([
+          renderResultado([
             { rowNumber: 2, prontuario_nome: "40521 - Carlos Eduardo Menezes", diagnostico: "Oncológico", dieta: "Branda Hipercalórica", desjejum: "MINGAU DE AVEIA + FRUTA", colacao: "SUCO ADOÇADO", almoco: "BRANDA COM FRANGO DESFIADO", lanche: "VITAMINA HIPERCALÓRICA", jantar: "SOPA CREMOSA", ceia: "MINGAU + COMPLEMENTO", observacao: "" }
           ]);
         } else {
-          renderTable([
+          renderResultado([
             { rowNumber: 2, prontuario_nome: "21768 - Maria Evilene Menezes Oliveira", diagnostico: "Puerpera", dieta: "Geral", desjejum: "CAFE COMPLETO + 1 OVO", colacao: "SUCO + BISCOITO", almoco: "GERAL COM FRANGO", lanche: "VITAMINA + BISCOITO", jantar: "BRANDA DE FRANGO", ceia: "MINGAU", observacao: "" },
             { rowNumber: 3, prontuario_nome: "32083 - Antonia de Araujo Silva", diagnostico: "Puérpera", dieta: "Geral HAS DM", desjejum: "CAFÉ COMPLETO DM", colacao: "SUCO DM", almoco: "GERAL HAS DM", lanche: "VITAMINA DM", jantar: "BRANDA DM HAS", ceia: "MINGAU DM + 1 FRUTA", observacao: "" }
           ]);
@@ -1220,8 +1246,36 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     });
   }
 
+  // Garante que o dia exibido existe de fato na planilha antes de qualquer
+  // edição. Se estamos numa prévia herdada, pede ao servidor para criar a aba
+  // (copiando o dia anterior NAQUELE momento) e atualiza a lista com os
+  // rowNumbers reais antes de continuar.
+  function garantirDiaMaterializado(aoTerminar) {
+    if (!diaHerdadoDe || typeof google === 'undefined') {
+      aoTerminar();
+      return;
+    }
+    showToast("Preparando o dia " + currentDate + "...");
+    google.script.run.withSuccessHandler((res) => {
+      if (res && res.success) {
+        diaHerdadoDe = null;
+        renderTable(res.pacientes);
+        atualizarBannerHeranca();
+        aoTerminar();
+      } else {
+        showToast("Erro ao preparar o dia: " + ((res && res.error) || ''), "error");
+      }
+    }).withFailureHandler(() => {
+      showToast("Erro ao preparar o dia", "error");
+    }).materializarDia(currentDate, currentPerfil);
+  }
+
   // === Modal Form (Adicionar/Editar) ===
   function openFormModal(index = null) {
+    garantirDiaMaterializado(() => openFormModalReal(index));
+  }
+
+  function openFormModalReal(index) {
     const form = document.getElementById("paciente-form");
     form.reset();
     document.getElementById("f-id").value = "";
