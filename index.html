@@ -423,6 +423,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
       <form id="paciente-form" onsubmit="salvarPacienteForm(event)">
         <input type="hidden" id="f-id">
         <div class="field">
+          <label>Dia do paciente</label>
+          <input type="date" id="f-data" required>
+          <small id="f-data-hint" style="display:block; margin-top:5px; font-size:12px; color:var(--mut);"></small>
+        </div>
+        <div class="field">
           <label>Prontuário / Nome do Paciente</label>
           <input type="text" id="f-nome" required placeholder="Ex: 32083 - Antonia de Araujo Silva">
         </div>
@@ -1283,9 +1288,19 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     mealFormState = {};
     MEAL_CATEGORIES.forEach(cat => { mealFormState[cat.field] = { chips: [], textoDraft: '' }; });
 
+    // Campo de data: deixa explícito em qual dia o paciente entra. Ao adicionar,
+    // vem preenchido com o dia selecionado na tela mas pode ser trocado; ao
+    // editar, fica travado (a linha pertence à aba do dia que está aberto).
+    const fData = document.getElementById("f-data");
+    fData.value = dataBRParaISO(currentDate);
+    fData.disabled = index !== null;
+    document.getElementById("f-data-hint").textContent = index !== null
+      ? "Editando o registro do dia " + currentDate + "."
+      : "O paciente será cadastrado neste dia. Troque a data se quiser cadastrá-lo em outro dia (ex: amanhã).";
+
     const btnAlta = document.getElementById("btn-alta");
     if (index !== null) {
-      document.getElementById("form-title").innerText = "Editar Paciente";
+      document.getElementById("form-title").innerText = "Editar Paciente (" + currentDate + ")";
       const p = dataPacientes[index];
       document.getElementById("f-id").value = p.rowNumber;
       document.getElementById("f-nome").value = p.prontuario_nome;
@@ -1344,11 +1359,21 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     }
   }
 
+  // Converte "yyyy-mm-dd" (input date) para "dd/mm/yyyy".
+  function dataISOParaBR(iso) {
+    const [ano, mes, dia] = iso.split('-');
+    return `${dia}/${mes}/${ano}`;
+  }
+
   function salvarPacienteForm(e) {
     e.preventDefault();
     const btn = document.getElementById("btn-salvar");
     btn.disabled = true;
     btn.innerHTML = '<span class="btn-loading">' + SPINNER_SVG + ' Salvando...</span>';
+
+    const editando = !!document.getElementById("f-id").value;
+    // Ao editar, a linha pertence ao dia aberto; ao adicionar, vale a data do formulário.
+    const dataAlvo = editando ? currentDate : dataISOParaBR(document.getElementById("f-data").value);
 
     const paciente = {
       rowNumber: document.getElementById("f-id").value || null,
@@ -1360,22 +1385,48 @@ main { max-width: 1400px; margin: 0 auto; padding: 22px 18px; }
     MEAL_CATEGORIES.forEach(cat => { paciente[cat.field] = combineMealValue(cat.field); });
 
     if (typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler((res) => {
+      const aoSalvar = (res) => {
         btn.disabled = false;
         btn.innerHTML = 'Salvar Paciente';
         if (res.success) {
-          showToast("Paciente salvo com sucesso!");
+          showToast("Paciente salvo no dia " + dataAlvo + "!");
           closeModal("modal-form");
+          if (dataAlvo !== currentDate) {
+            // Cadastrou em outro dia: muda a tela para ele, para o usuário ver onde foi parar.
+            const sel = document.getElementById("date-select");
+            if (![...sel.options].some(o => o.value === dataAlvo)) {
+              const opt = document.createElement("option");
+              opt.value = dataAlvo;
+              opt.innerText = dataAlvo;
+              sel.appendChild(opt);
+              ordenarOpcoesData(sel);
+            }
+            sel.value = dataAlvo;
+          }
           onDateChange(); // Recarrega a lista do dia
         } else {
           showToast("Erro ao salvar: " + res.error, "error");
         }
-      }).withFailureHandler((err) => {
+      };
+      const aoFalhar = (err) => {
         btn.disabled = false;
         btn.innerHTML = 'Salvar Paciente';
         showToast("Erro ao salvar", "error");
         console.error(err);
-      }).salvarPaciente(currentDate, paciente, currentPerfil);
+      };
+      const salvar = () => {
+        google.script.run.withSuccessHandler(aoSalvar).withFailureHandler(aoFalhar)
+          .salvarPaciente(dataAlvo, paciente, currentPerfil);
+      };
+      if (!editando && dataAlvo !== currentDate) {
+        // Dia de destino diferente do aberto: materializa antes (herda o dia
+        // anterior naquele momento), senão a aba nasceria só com este paciente.
+        google.script.run.withSuccessHandler((res) => {
+          if (res && res.success) salvar(); else aoFalhar(res && res.error);
+        }).withFailureHandler(aoFalhar).materializarDia(dataAlvo, currentPerfil);
+      } else {
+        salvar();
+      }
     } else {
       setTimeout(() => {
         btn.disabled = false;
