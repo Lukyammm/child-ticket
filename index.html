@@ -189,16 +189,16 @@ body.theme-onco { --zebra: #f7faf7; }
 .label-preview-wrapper { background: var(--paper); padding: 20px; display: flex; justify-content: center; }
 .label-preview { width: 104mm; height: 56mm; background: #fff; border: 1px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 3mm 3mm 3mm 5.5mm; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: Arial, sans-serif; color: #000; }
 .label-preview::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5mm; background: var(--pri); }
-.label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #666; padding-bottom: 1.3mm; border-bottom: 0.35mm solid #e6e6e6; margin-bottom: 1.6mm; }
+.label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #000; padding-bottom: 1.3mm; border-bottom: 0.4mm solid #999; margin-bottom: 1.6mm; }
 .label-paciente { font-size: 10.5pt; font-weight: 800; line-height: 1.2; margin-bottom: 0.6mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.label-diag { font-size: 7.8pt; color: #666; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.label-diag { font-size: 7.8pt; color: #000; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .label-diag:empty { display: none; }
 .label-refeicao-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.8mm; flex-wrap: wrap; }
 .label-refeicao { display: inline-block; background: var(--pri); color: #fff; font-size: 9pt; font-weight: 800; padding: 1mm 2.2mm; border-radius: 1mm; text-transform: uppercase; letter-spacing: 0.3pt; }
-.label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: var(--pri-d); border: 0.3mm solid var(--pri); border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
-.label-item { flex: 1; display: flex; align-items: center; font-size: 12.5pt; font-weight: 800; line-height: 1.22; overflow: hidden; }
-.label-obs { font-size: 7.5pt; font-weight: 700; color: #000; padding-top: 1mm; margin-top: auto; border-top: 0.3mm dashed #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.label-obs:empty { display: none; border-top: none; padding-top: 0; }
+.label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: var(--pri-d); border: 0.4mm solid var(--pri); border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
+.label-item { flex: 1; display: flex; align-items: center; font-size: 13pt; font-weight: 800; line-height: 1.2; overflow: hidden; }
+.label-obs { font-size: 8pt; font-weight: 800; color: #000; margin-top: auto; border: 0.5mm solid #000; border-radius: 1mm; padding: 1mm 1.6mm; line-height: 1.2; }
+.label-obs:empty { display: none; }
 
 /* Toasts */
 #toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 99; display: grid; gap: 8px; pointer-events: none; }
@@ -1080,16 +1080,16 @@ body.theme-onco { --zebra: #f7faf7; }
   .label-preview { width: 104mm; height: 56mm; padding: 3mm 3mm 3mm 5.5mm; position: relative; overflow: hidden; display: flex; flex-direction: column; ${pageBreak ? 'page-break-after: always;' : ''} }
   .label-preview:last-child { page-break-after: auto; }
   .label-preview::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5mm; background: ${cores.pri}; }
-  .label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #666; padding-bottom: 1.3mm; border-bottom: 0.35mm solid #e6e6e6; margin-bottom: 1.6mm; }
+  .label-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; color: #000; padding-bottom: 1.3mm; border-bottom: 0.4mm solid #999; margin-bottom: 1.6mm; }
   .label-paciente { font-size: 10.5pt; font-weight: 800; line-height: 1.2; margin-bottom: 0.6mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .label-diag { font-size: 7.8pt; color: #666; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .label-diag { font-size: 7.8pt; color: #000; font-weight: 600; margin-bottom: 1.8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .label-diag:empty { display: none; }
   .label-refeicao-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.8mm; flex-wrap: wrap; }
   .label-refeicao { display: inline-block; background: ${cores.pri}; color: #fff; font-size: 9pt; font-weight: 800; padding: 1mm 2.2mm; border-radius: 1mm; text-transform: uppercase; letter-spacing: 0.3pt; }
-  .label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: ${cores.priD}; border: 0.3mm solid ${cores.pri}; border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
-  .label-item { flex: 1; display: flex; align-items: center; font-size: 12.5pt; font-weight: 800; line-height: 1.22; overflow: hidden; }
-  .label-obs { font-size: 7.5pt; font-weight: 700; color: #000; padding-top: 1mm; margin-top: auto; border-top: 0.3mm dashed #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .label-obs:empty { display: none; border-top: none; padding-top: 0; }`;
+  .label-dieta-tag { font-size: 7.3pt; font-weight: 700; color: ${cores.priD}; border: 0.4mm solid ${cores.pri}; border-radius: 1mm; padding: 0.5mm 1.5mm; text-transform: uppercase; }
+  .label-item { flex: 1; display: flex; align-items: center; font-size: 13pt; font-weight: 800; line-height: 1.2; overflow: hidden; }
+  .label-obs { font-size: 8pt; font-weight: 800; color: #000; margin-top: auto; border: 0.5mm solid #000; border-radius: 1mm; padding: 1mm 1.6mm; line-height: 1.2; }
+  .label-obs:empty { display: none; }`;
   }
 
   // Abre uma janela nova com uma ou mais etiquetas e dispara a impressão.
