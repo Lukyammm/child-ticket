@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <style>
 :root {
   --ink: #2a1d24;
@@ -2196,15 +2197,15 @@ body.theme-onco { --zebra: #f7faf7; }
     janela.onafterprint = () => janela.close();
   }
 
-  // --- Função para Baixar Planilha (CSV) ---
+  // --- Função para Baixar Planilha (Excel - XLSX) ---
   function baixarPlanilhaMapa() {
     if (!dataPacientes || dataPacientes.length === 0) {
       showToast("Nenhum paciente carregado nesta data", "error");
       return;
     }
     
-    // BOM para excel entender acentuação no CSV
-    let csv = '\uFEFFNº;Prontuário / Paciente;Diagnóstico;Dieta;Desjejum (6h);Colação (9h);Almoço (12h);Lanche (15h);Jantar (18h);Ceia (21h);Observação\n';
+    const rows = [];
+    rows.push(['Nº', 'Prontuário / Paciente', 'Diagnóstico', 'Dieta', 'Desjejum (6h)', 'Colação (9h)', 'Almoço (12h)', 'Lanche (15h)', 'Jantar (18h)', 'Ceia (21h)', 'Observação']);
     
     dataPacientes.forEach((p, index) => {
       const formatMeal = (meal) => {
@@ -2213,7 +2214,7 @@ body.theme-onco { --zebra: #f7faf7; }
         return String(meal).replace(/\n/g, ' + ');
       };
 
-      const row = [
+      rows.push([
         index + 1,
         p.nome || '',
         p.diagnostico || '',
@@ -2225,21 +2226,26 @@ body.theme-onco { --zebra: #f7faf7; }
         formatMeal(p.jantar),
         formatMeal(p.ceia),
         p.obs || ''
-      ].map(v => '"' + String(v).replace(/"/g, '""') + '"');
-      
-      csv += row.join(';') + '\n';
+      ]);
     });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Mapa");
+    
+    // Auto-ajustar largura das colunas
+    const maxWidths = rows.reduce((acc, row) => {
+      row.forEach((cell, i) => {
+        const len = cell ? String(cell).length : 0;
+        acc[i] = Math.max(acc[i] || 10, len);
+      });
+      return acc;
+    }, []);
+    worksheet['!cols'] = maxWidths.map(w => ({ wch: w + 2 }));
+
     const dataStr = currentDate.replace(/\//g, '-');
-    a.download = `Mapa_Refeicoes_${dataStr}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast("Planilha gerada com sucesso!");
+    XLSX.writeFile(workbook, `Mapa_Refeicoes_${dataStr}.xlsx`);
+    showToast("Planilha Excel gerada com sucesso!");
   }
 </script>
 
