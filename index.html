@@ -255,15 +255,7 @@ body.theme-onco { --zebra: #f7faf7; }
   body:not(.print-map-mode) * { visibility: hidden; }
   body:not(.print-map-mode) .label-preview, body:not(.print-map-mode) .label-preview * { visibility: visible; }
   body:not(.print-map-mode) .label-preview { position: absolute; left: 0; top: 0; border: none; box-shadow: none; margin: 0; background: #fff; }
-  
-  /* Modo Mapa Copeira */
-  body.print-map-mode > :not(#mapa-print-container) { display: none !important; }
-  body.print-map-mode #mapa-print-container { display: block !important; width: 100%; margin: 0; padding: 0; }
 }
-
-/* Map Table Styles (only visible when printing map) */
-#mapa-print-container { display: none; font-family: Arial, sans-serif; color: #000; }
-body.print-map-mode #mapa-print-container { display: block; }
 .mapa-table { width: 100%; border-collapse: collapse; font-size: 10px; }
 .mapa-table th, .mapa-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; }
 .mapa-table th { background: #f0c2d1; font-weight: bold; text-transform: uppercase; font-size: 11px; }
@@ -2168,24 +2160,35 @@ body.print-map-mode #mapa-print-container { display: block; }
       </table>
     `;
 
-    mapContainer.innerHTML = html;
+    const janela = window.open('', '_blank');
+    if (!janela) {
+      showToast("Permita pop-ups no navegador para imprimir o mapa", "error");
+      return;
+    }
 
-    // Criar estilo dinâmico para forçar folha A4 paisagem sem estragar etiquetas
-    const style = document.createElement('style');
-    style.id = 'dynamic-page-style';
-    style.innerHTML = '@media print { @page { size: A4 landscape; margin: 10mm; } }';
-    document.head.appendChild(style);
+    const estiloMapa = `
+      @page { size: A4 landscape; margin: 10mm; }
+      body { font-family: Arial, sans-serif; color: #000; background: #fff; margin: 0; padding: 0; }
+      .mapa-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+      .mapa-table th, .mapa-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; }
+      .mapa-table th { background: #f0c2d1; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+      .mapa-table-onco th { background: #c2e0d6; }
+      .mapa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 2px solid #000; padding: 8px; font-weight: bold; font-size: 16px; text-transform: uppercase; }
+      .mapa-header-title { text-align: center; flex: 1; }
+    `;
 
-    document.body.classList.add('print-map-mode');
-    
-    setTimeout(() => {
-      window.print();
-      // Limpeza após imprimir
-      document.body.classList.remove('print-map-mode');
-      const st = document.getElementById('dynamic-page-style');
-      if (st) st.remove();
+    janela.document.write(`<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Mapa de Refeições</title>
+<style>${estiloMapa}</style>
+</head><body>${html}</body></html>`);
+    janela.document.close();
+
+    setTimeout(() => { 
+      janela.focus(); 
+      janela.print(); 
       if(typeof SoundUX !== 'undefined') SoundUX.print();
     }, 500);
+    janela.onafterprint = () => janela.close();
   }
 </script>
 
