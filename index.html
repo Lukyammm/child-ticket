@@ -2111,17 +2111,17 @@ body.theme-onco { --zebra: #f7faf7; }
       <table class="mapa-table ${isOnco ? 'mapa-table-onco' : ''}">
         <thead>
           <tr>
-            <th style="width: 3%;">Nº</th>
-            <th style="width: 15%;">Prontuário / Paciente</th>
-            <th style="width: 8%;">Diagnóstico</th>
-            <th style="width: 10%;">Dieta</th>
+            <th style="width: 2%;">Nº</th>
+            <th style="width: 12%;">Prontuário / Paciente</th>
+            <th style="width: 7%;">Diagnóstico</th>
+            <th style="width: 7%;">Dieta</th>
             <th style="width: 10%;">DESJEJUM - 6h</th>
             <th style="width: 10%;">COLAÇÃO - 9h</th>
             <th style="width: 10%;">ALMOÇO - 12h</th>
             <th style="width: 10%;">LANCHE - 15h</th>
             <th style="width: 10%;">JANTAR - 18h</th>
             <th style="width: 10%;">CEIA - 21h</th>
-            <th style="width: 4%;">OBSERVAÇÃO</th>
+            <th style="width: 12%;">OBSERVAÇÃO</th>
           </tr>
         </thead>
         <tbody>
@@ -2141,14 +2141,14 @@ body.theme-onco { --zebra: #f7faf7; }
       const lan = formatMeal(p.lanche);
       const jan = formatMeal(p.jantar);
       const cei = formatMeal(p.ceia);
-      const obs = escapeHtml(p.obs || '');
+      const obs = escapeHtml(p.observacao || '');
 
       html += `
         <tr>
           <td>${index + 1}</td>
-          <td style="font-weight:bold;">${escapeHtml(p.nome)}</td>
+          <td style="font-weight:bold;">${escapeHtml(p.prontuario_nome || '')}</td>
           <td>${escapeHtml(p.diagnostico || '')}</td>
-          <td style="color:${isOnco ? '#0a5a46' : '#99194a'}; font-weight:bold;">${escapeHtml(p.dieta)}</td>
+          <td style="color:${isOnco ? '#0a5a46' : '#99194a'}; font-weight:bold;">${escapeHtml(p.dieta || '')}</td>
           <td>${desj}</td>
           <td>${col}</td>
           <td>${alm}</td>
@@ -2260,7 +2260,7 @@ body.theme-onco { --zebra: #f7faf7; }
 
       rows.push([
         index + 1,
-        p.nome || '',
+        p.prontuario_nome || '',
         p.diagnostico || '',
         p.dieta || '',
         formatMeal(p.desjejum),
@@ -2269,7 +2269,7 @@ body.theme-onco { --zebra: #f7faf7; }
         formatMeal(p.lanche),
         formatMeal(p.jantar),
         formatMeal(p.ceia),
-        p.obs || ''
+        p.observacao || ''
       ]);
     });
 
