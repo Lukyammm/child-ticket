@@ -408,7 +408,11 @@ body.theme-onco { --zebra: #f7faf7; }
       </button>
       <button class="btn icon-btn" title="Imprimir mapa para a Copeira" onclick="imprimirMapa()">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        <span class="btn-text">Mapa</span>
+        <span class="btn-text">Imprimir Mapa / PDF</span>
+      </button>
+      <button class="btn icon-btn" style="color: #1f8c70; border-color: #1f8c70; background: #eef8f5;" title="Baixar planilha em formato Excel/CSV" onclick="baixarPlanilhaMapa()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span class="btn-text">Planilha</span>
       </button>
       <button class="lockbtn" id="btn-som" title="Ativar/desativar sons" aria-label="Ativar ou desativar sons do sistema" onclick="alternarSom()"></button>
       <button class="lockbtn" title="Área de administração" onclick="abrirLoginAdmin()">
@@ -2190,6 +2194,52 @@ body.theme-onco { --zebra: #f7faf7; }
       if(typeof SoundUX !== 'undefined') SoundUX.print();
     }, 500);
     janela.onafterprint = () => janela.close();
+  }
+
+  // --- Função para Baixar Planilha (CSV) ---
+  function baixarPlanilhaMapa() {
+    if (!dataPacientes || dataPacientes.length === 0) {
+      showToast("Nenhum paciente carregado nesta data", "error");
+      return;
+    }
+    
+    // BOM para excel entender acentuação no CSV
+    let csv = '\uFEFFNº;Prontuário / Paciente;Diagnóstico;Dieta;Desjejum (6h);Colação (9h);Almoço (12h);Lanche (15h);Jantar (18h);Ceia (21h);Observação\n';
+    
+    dataPacientes.forEach((p, index) => {
+      const formatMeal = (meal) => {
+        if (!meal) return '';
+        if (Array.isArray(meal)) return meal.join(' + ');
+        return String(meal).replace(/\n/g, ' + ');
+      };
+
+      const row = [
+        index + 1,
+        p.nome || '',
+        p.diagnostico || '',
+        p.dieta || '',
+        formatMeal(p.desjejum),
+        formatMeal(p.colacao),
+        formatMeal(p.almoco),
+        formatMeal(p.lanche),
+        formatMeal(p.jantar),
+        formatMeal(p.ceia),
+        p.obs || ''
+      ].map(v => '"' + String(v).replace(/"/g, '""') + '"');
+      
+      csv += row.join(';') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dataStr = currentDate.replace(/\//g, '-');
+    a.download = `Mapa_Refeicoes_${dataStr}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast("Planilha gerada com sucesso!");
   }
 </script>
 
