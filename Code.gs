@@ -462,6 +462,27 @@ function getItensSheet_(ss) {
   if (!sheet) {
     sheet = ss.insertSheet('ITENS_DIETA');
     sheet.appendRow(['Item']);
+    
+    // Seed initial food list
+    const defaultItems = [
+      'CAFÉ PURO', 'CAFÉ COMPLETO', 'CAFÉ COMPLETO DM', 'CHÁ', 'LEITE PURO', 'LEITE DESNATADO',
+      'BISCOITO', 'BISCOITO SALGADO', 'BISCOITO INTEGRAL', 'BISCOITO DOCE',
+      'CUSCUZ', 'TAPIOCA', 'OVO', 'QUEIJO',
+      'IOGURTE', 'IOGURTE COM FRUTAS', 'IOGURTE NATURAL',
+      'MINGAU', 'MINGAU DM', 'MINGAU DE AVEIA',
+      'PÃO FRANCÊS', 'PÃO INTEGRAL', 'PÃO COM QUEIJO',
+      'SUCO', 'SUCO DM', 'VITAMINA', 'VITAMINA DM',
+      'BEBIDA PROTEICA', 'BEBIDA HIPERCALÓRICA (FRESUBIN)',
+      'LARANJA', 'MAÇÃ', 'BANANA', 'TANGERINA', 'MAMÃO', 'MELANCIA', 'MELÃO',
+      'SALADA COZIDA', 'SALADA CRUA', 'FEIJÃO',
+      'FRANGO ASSADO', 'FRANGO COZIDO', 'MACARRÃO',
+      'PEIXE ASSADO', 'PEIXE COZIDO',
+      'SOPA INTEIRA', 'SOPA PASSADA', 'SOPA INTEIRA FRANGO', 'SOPA INTEIRA CARNE', 'SOPA PASSADA FRANGO', 'SOPA PASSADA CARNE',
+      'GERAL', 'GERAL HAS DM', 'BRANDA'
+    ];
+    
+    const rows = defaultItems.map(item => [item]);
+    sheet.getRange(2, 1, rows.length, 1).setValues(rows);
   }
   return sheet;
 }
