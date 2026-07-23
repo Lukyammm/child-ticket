@@ -250,13 +250,15 @@ body.theme-onco { --zebra: #f7faf7; }
 /* Print Styles */
 @media print {
   @page { size: 104mm 56mm; margin: 0; padding: 0; }
+  
+  /* Padrão (Etiquetas) */
   body:not(.print-map-mode) * { visibility: hidden; }
   body:not(.print-map-mode) .label-preview, body:not(.print-map-mode) .label-preview * { visibility: visible; }
   body:not(.print-map-mode) .label-preview { position: absolute; left: 0; top: 0; border: none; box-shadow: none; margin: 0; background: #fff; }
   
-  body.print-map-mode * { visibility: hidden; }
-  body.print-map-mode #mapa-print-container, body.print-map-mode #mapa-print-container * { visibility: visible; }
-  body.print-map-mode #mapa-print-container { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+  /* Modo Mapa Copeira */
+  body.print-map-mode > :not(#mapa-print-container) { display: none !important; }
+  body.print-map-mode #mapa-print-container { display: block; width: 100%; margin: 0; padding: 0; }
 }
 
 /* Map Table Styles (only visible when printing map) */
@@ -2171,7 +2173,7 @@ body.print-map-mode #mapa-print-container { display: block; }
     // Criar estilo dinâmico para forçar folha A4 paisagem sem estragar etiquetas
     const style = document.createElement('style');
     style.id = 'dynamic-page-style';
-    style.innerHTML = '@media print { @page { size: A4 landscape !important; margin: 10mm !important; } }';
+    style.innerHTML = '@media print { @page { size: A4 landscape; margin: 10mm; } }';
     document.head.appendChild(style);
 
     document.body.classList.add('print-map-mode');
