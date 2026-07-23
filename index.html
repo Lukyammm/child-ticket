@@ -2129,13 +2129,19 @@ body.print-map-mode #mapa-print-container { display: block; }
     `;
 
     dataPacientes.forEach((p, index) => {
-      // Extrai os itens separados por quebra de linha usando <br> para impressão
-      const desj = (p.desjejum || []).join('<br/>');
-      const col = (p.colacao || []).join('<br/>');
-      const alm = (p.almoco || []).join('<br/>');
-      const lan = (p.lanche || []).join('<br/>');
-      const jan = (p.jantar || []).join('<br/>');
-      const cei = (p.ceia || []).join('<br/>');
+      // Helper para formatar a refeição (garante que não quebre se vier como string)
+      const formatMeal = (meal) => {
+        if (!meal) return '';
+        if (Array.isArray(meal)) return meal.join('<br/>');
+        return String(meal);
+      };
+
+      const desj = formatMeal(p.desjejum);
+      const col = formatMeal(p.colacao);
+      const alm = formatMeal(p.almoco);
+      const lan = formatMeal(p.lanche);
+      const jan = formatMeal(p.jantar);
+      const cei = formatMeal(p.ceia);
       const obs = escapeHtml(p.obs || '');
 
       html += `
