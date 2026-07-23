@@ -2167,8 +2167,9 @@ body.theme-onco { --zebra: #f7faf7; }
     }
 
     const estiloMapa = `
-      @page { size: A4 landscape; margin: 10mm; }
-      body { font-family: Arial, sans-serif; color: #000; background: #fff; margin: 0; padding: 0; }
+      @page { size: A4 landscape; margin: 15mm; }
+      * { box-sizing: border-box; }
+      body { font-family: Arial, sans-serif; color: #000; background: #fff; margin: 0; padding: 15px 20px; }
       .mapa-table { width: 100%; border-collapse: collapse; font-size: 10px; }
       .mapa-table th, .mapa-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; }
       .mapa-table th { background: #f0c2d1; font-weight: bold; text-transform: uppercase; font-size: 11px; }
