@@ -250,10 +250,24 @@ body.theme-onco { --zebra: #f7faf7; }
 /* Print Styles */
 @media print {
   @page { size: 104mm 56mm; margin: 0; padding: 0; }
-  body * { visibility: hidden; }
-  .label-preview, .label-preview * { visibility: visible; }
-  .label-preview { position: absolute; left: 0; top: 0; border: none; box-shadow: none; margin: 0; background: #fff; }
+  body:not(.print-map-mode) * { visibility: hidden; }
+  body:not(.print-map-mode) .label-preview, body:not(.print-map-mode) .label-preview * { visibility: visible; }
+  body:not(.print-map-mode) .label-preview { position: absolute; left: 0; top: 0; border: none; box-shadow: none; margin: 0; background: #fff; }
+  
+  body.print-map-mode * { visibility: hidden; }
+  body.print-map-mode #mapa-print-container, body.print-map-mode #mapa-print-container * { visibility: visible; }
+  body.print-map-mode #mapa-print-container { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
 }
+
+/* Map Table Styles (only visible when printing map) */
+#mapa-print-container { display: none; font-family: Arial, sans-serif; color: #000; }
+body.print-map-mode #mapa-print-container { display: block; }
+.mapa-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.mapa-table th, .mapa-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; }
+.mapa-table th { background: #f0c2d1; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+.mapa-table-onco th { background: #c2e0d6; }
+.mapa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 2px solid #000; padding: 8px; font-weight: bold; font-size: 16px; text-transform: uppercase; }
+.mapa-header-title { text-align: center; flex: 1; }
 
 /* Responsividade Mobile-First (Inteligente) */
 @media (max-width: 768px) {
@@ -396,7 +410,11 @@ body.theme-onco { --zebra: #f7faf7; }
       </button>
       <button class="btn icon-btn" title="Imprimir várias etiquetas de uma vez" onclick="abrirImpressaoLote()">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        <span class="btn-text">Imprimir</span>
+        <span class="btn-text">Etiquetas</span>
+      </button>
+      <button class="btn icon-btn" title="Imprimir mapa para a Copeira" onclick="imprimirMapa()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span class="btn-text">Mapa</span>
       </button>
       <button class="lockbtn" id="btn-som" title="Ativar/desativar sons" aria-label="Ativar ou desativar sons do sistema" onclick="alternarSom()"></button>
       <button class="lockbtn" title="Área de administração" onclick="abrirLoginAdmin()">
@@ -2072,7 +2090,98 @@ body.theme-onco { --zebra: #f7faf7; }
     document.getElementById(id).classList.remove("open");
   }
 
+  // --- Função para Imprimir o Mapa da Copeira ---
+  function imprimirMapa() {
+    if (!dataPacientes || dataPacientes.length === 0) {
+      showToast('Não há pacientes para imprimir no mapa.', 'error');
+      return;
+    }
+
+    const mapContainer = document.getElementById('mapa-print-container');
+    const headerTitle = currentPerfil === 'GESTANTE' ? 'CASA DA GESTANTE' : 'SETOR ONCOLÓGICO';
+    const isOnco = currentPerfil === 'ONCOLOGICO';
+    const dataAtual = document.getElementById('date-select').value || getDataAtual();
+    
+    // Gerar o HTML da tabela
+    let html = `
+      <div class="mapa-header">
+        <span></span>
+        <span class="mapa-header-title">${headerTitle}</span>
+        <span class="mapa-header-date">DATA: ${dataAtual}</span>
+      </div>
+      <table class="mapa-table ${isOnco ? 'mapa-table-onco' : ''}">
+        <thead>
+          <tr>
+            <th style="width: 3%;">Nº</th>
+            <th style="width: 15%;">Prontuário / Paciente</th>
+            <th style="width: 8%;">Diagnóstico</th>
+            <th style="width: 10%;">Dieta</th>
+            <th style="width: 10%;">DESJEJUM - 6h</th>
+            <th style="width: 10%;">COLAÇÃO - 9h</th>
+            <th style="width: 10%;">ALMOÇO - 12h</th>
+            <th style="width: 10%;">LANCHE - 15h</th>
+            <th style="width: 10%;">JANTAR - 18h</th>
+            <th style="width: 10%;">CEIA - 21h</th>
+            <th style="width: 4%;">OBSERVAÇÃO</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    dataPacientes.forEach((p, index) => {
+      // Extrai os itens separados por quebra de linha usando <br> para impressão
+      const desj = (p.desjejum || []).join('<br/>');
+      const col = (p.colacao || []).join('<br/>');
+      const alm = (p.almoco || []).join('<br/>');
+      const lan = (p.lanche || []).join('<br/>');
+      const jan = (p.jantar || []).join('<br/>');
+      const cei = (p.ceia || []).join('<br/>');
+      const obs = escapeHtml(p.obs || '');
+
+      html += `
+        <tr>
+          <td>${index + 1}</td>
+          <td style="font-weight:bold;">${escapeHtml(p.nome)}</td>
+          <td>${escapeHtml(p.diagnostico || '')}</td>
+          <td style="color:${isOnco ? '#0a5a46' : '#99194a'}; font-weight:bold;">${escapeHtml(p.dieta)}</td>
+          <td>${desj}</td>
+          <td>${col}</td>
+          <td>${alm}</td>
+          <td>${lan}</td>
+          <td>${jan}</td>
+          <td>${cei}</td>
+          <td style="font-size: 9px;">${obs}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    mapContainer.innerHTML = html;
+
+    // Criar estilo dinâmico para forçar folha A4 paisagem sem estragar etiquetas
+    const style = document.createElement('style');
+    style.id = 'dynamic-page-style';
+    style.innerHTML = '@media print { @page { size: A4 landscape !important; margin: 10mm !important; } }';
+    document.head.appendChild(style);
+
+    document.body.classList.add('print-map-mode');
+    
+    setTimeout(() => {
+      window.print();
+      // Limpeza após imprimir
+      document.body.classList.remove('print-map-mode');
+      const st = document.getElementById('dynamic-page-style');
+      if (st) st.remove();
+      if(typeof SoundUX !== 'undefined') SoundUX.print();
+    }, 500);
+  }
 </script>
+
+<div id="mapa-print-container" style="display:none;"></div>
 
 </body>
 </html>
