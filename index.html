@@ -2174,13 +2174,57 @@ body.theme-onco { --zebra: #f7faf7; }
     const estiloMapa = `
       @page { size: A4 landscape; margin: 15mm; }
       * { box-sizing: border-box; }
-      body { font-family: Arial, sans-serif; color: #000; background: #fff; margin: 0; padding: 15px 20px; }
-      .mapa-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-      .mapa-table th, .mapa-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; }
-      .mapa-table th { background: #f0c2d1; font-weight: bold; text-transform: uppercase; font-size: 11px; }
-      .mapa-table-onco th { background: #c2e0d6; }
-      .mapa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 2px solid #000; padding: 8px; font-weight: bold; font-size: 16px; text-transform: uppercase; }
-      .mapa-header-title { text-align: center; flex: 1; }
+      body { 
+        font-family: 'Inter', -apple-system, sans-serif; 
+        color: #222; 
+        background: #fff; 
+        margin: 0; 
+        padding: 0;
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+      }
+      .mapa-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: flex-end; 
+        margin-bottom: 15px; 
+        border-bottom: 2px solid #ddd; 
+        padding-bottom: 10px; 
+      }
+      .mapa-header > div:first-child, .mapa-header > div:last-child {
+        font-size: 13px;
+        color: #555;
+        font-weight: 600;
+      }
+      .mapa-header-title { 
+        text-align: center; 
+        flex: 1; 
+        font-size: 18px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .mapa-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        font-size: 10px; 
+      }
+      .mapa-table th, .mapa-table td { 
+        border: 1px solid #ddd; 
+        padding: 6px 8px; 
+        text-align: left; 
+        vertical-align: top; 
+      }
+      .mapa-table th { 
+        background-color: #f5f5f5; 
+        color: #333;
+        font-weight: 700; 
+        text-transform: uppercase; 
+        font-size: 10px; 
+      }
+      .mapa-table-onco th { border-top: 3px solid #0e7a5f; }
+      .mapa-table:not(.mapa-table-onco) th { border-top: 3px solid #c2255c; }
+      .mapa-table tbody tr:nth-child(even) { background-color: #fafafa; }
     `;
 
     janela.document.write(`<!DOCTYPE html>
